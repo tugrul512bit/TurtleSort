@@ -18,8 +18,9 @@ Test system: RTX4070, Ryzen7900, DDR5-6000 dual-channel RAM.
 
 # Requirements
 
-GPU: Nvidia with dynamic-parallelism + CUDA 12 support. 
-Video-memory: yes
+- GPU: Nvidia with dynamic-parallelism + CUDA 12 support. 
+- Video-memory: 700MB per 10M integer sorting, 1GB with index tracking.
+- RAM: only input vector is used as i/o.
 
 Compiler options: 
 
