@@ -3,8 +3,9 @@
 
 namespace QuickIndex
 {
-
-    constexpr int BRUTE_FORCE_LIMIT = 1024;
+    // in-kernel memory consumption increases with index-tracking
+    // tuned down for better occupancy of SM units
+    constexpr int BRUTE_FORCE_LIMIT = 256; 
 
 
 
