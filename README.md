@@ -29,7 +29,7 @@ int main()
     constexpr int n = 1024 * 1024;
 
     // this can sort any length of arrays up to n
-    FastestQuicksort<Type> sort(1024 * 1024);
+    FastestQuicksort<Type> sort(n);
     std::vector<Type> test = { 5,3,7,3,1 };
     sort.StartSorting(&test);
     std::cout << "Asynchronous computing..." << std::endl;
@@ -56,11 +56,11 @@ Asynchronous computing...
 // test program
 int main()
 {
-    using Type = unsigned long;
-    constexpr int n = 1024 * 1024;
+    using Type = unsigned int;
+    constexpr int n = 1024 * 1024*4;
 
     // this can sort any length of arrays up to n
-    FastestQuicksort<Type> sort(1024 * 1024);
+    FastestQuicksort<Type> sort(n);
 
 
     std::vector<Type> hostData(n),backup(n),backup2(n);
@@ -129,18 +129,37 @@ int main()
 
 Benchmark output:
 ```
-gpu: 0.0082205  std::qsort:0.0857989   std::sort:0.0485793
-quicksort (1048576 elements) completed successfully
-gpu: 0.0081355  std::qsort:0.0863304   std::sort:0.0484651
-quicksort (1048576 elements) completed successfully
-gpu: 0.0079001  std::qsort:0.0872137   std::sort:0.0475039
-quicksort (1048576 elements) completed successfully
-gpu: 0.0078362  std::qsort:0.084857   std::sort:0.047796
-quicksort (1048576 elements) completed successfully
-gpu: 0.0077608  std::qsort:0.0846576   std::sort:0.0471589
-quicksort (1048576 elements) completed successfully
-gpu: 0.0076506  std::qsort:0.0851764   std::sort:0.0474846
-quicksort (1048576 elements) completed successfully
-gpu: 0.0083327  std::qsort:0.0846722   std::sort:0.0471619
-quicksort (1048576 elements) completed successfully
+gpu: 0.0281749  std::qsort:0.351473   std::sort:0.210874
+quicksort (4194304 elements) completed successfully
+gpu: 0.0258249  std::qsort:0.349816   std::sort:0.208962
+quicksort (4194304 elements) completed successfully
+gpu: 0.0278634  std::qsort:0.351745   std::sort:0.206858
+quicksort (4194304 elements) completed successfully
+gpu: 0.0259602  std::qsort:0.349713   std::sort:0.210283
+quicksort (4194304 elements) completed successfully
+gpu: 0.0264832  std::qsort:0.350344   std::sort:0.208919
+quicksort (4194304 elements) completed successfully
+gpu: 0.0296906  std::qsort:0.349768   std::sort:0.210426
+quicksort (4194304 elements) completed successfully
+gpu: 0.025604  std::qsort:0.352172   std::sort:0.209454
+quicksort (4194304 elements) completed successfully
+gpu: 0.0286119  std::qsort:0.353272   std::sort:0.210681
+quicksort (4194304 elements) completed successfully
+gpu: 0.0264158  std::qsort:0.350123   std::sort:0.21063
+quicksort (4194304 elements) completed successfully
+gpu: 0.0271356  std::qsort:0.349506   std::sort:0.210362
+quicksort (4194304 elements) completed successfully
+....
+after a while, GPU drivers lower the frequency of GPU because sorting does not involve enough computations
+....
+gpu: 0.0783411  std::qsort:0.354786   std::sort:0.209785
+quicksort (4194304 elements) completed successfully
+gpu: 0.0955575  std::qsort:0.34841   std::sort:0.210203
+quicksort (4194304 elements) completed successfully
+gpu: 0.121601  std::qsort:0.348363   std::sort:0.210336
+quicksort (4194304 elements) completed successfully
+gpu: 0.107721  std::qsort:0.348657   std::sort:0.211444
+quicksort (4194304 elements) completed successfully
+gpu: 0.105653  std::qsort:0.35383   std::sort:0.210593
+^^ this is when GPU is 400 MHz instead of 2600
 ```
