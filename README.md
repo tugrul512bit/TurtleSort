@@ -26,7 +26,9 @@ Compiler options:
 - compute_89, sm_89 for latest RTX cards
 - -lineinfo for debugging
 - host: /Ox highest optimization level
+- release mode, x64 selected
 
+  
 # Sample Code
 
 ```C++
