@@ -28,6 +28,11 @@ Compiler options:
 - host: /Ox highest optimization level
 - release mode, x64 selected
 
+# Headers
+
+fastest-quicksort.cuh: In ```Quick``` namespace, ```FastestQuicksort``` struct can be initialized with a maximum size to sort. Then any sized array can be sorted by ```StartSorting``` method and synchronized with ```Sync``` method.
+
+fastest-quicksort-with-index.cuh: In ```QuickIndex``` namespace, same method takes a second vector for index values. Indices follow same data path as the data. But it works as SOA rather than AOS (unlike std::sort or std::qsort).
   
 # Sample Code
 
@@ -42,7 +47,7 @@ int main()
     constexpr int n = 1024 * 1024;
 
     // this can sort any length of arrays up to n
-    FastestQuicksort<Type> sort(n);
+    Quick::FastestQuicksort<Type> sort(n);
     std::vector<Type> test = { 5,3,7,3,1 };
     sort.StartSorting(&test);
     std::cout << "Asynchronous computing..." << std::endl;
