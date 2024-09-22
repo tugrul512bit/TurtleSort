@@ -4,18 +4,11 @@
 // test program
 int main()
 {
-    using Type = unsigned long;
-    constexpr int n = 1024 * 1024;
+    using Type = unsigned int;
+    constexpr int n = 1024 * 1024*4;
 
     // this can sort any length of arrays up to n
-    FastestQuicksort<Type> sort(1024 * 1024);
-    std::vector<Type> test = { 5,3,7,3,1 };
-    sort.StartSorting(&test);
-    std::cout << "Asynchronous computing..." << std::endl;
-    sort.Sync();
-    for (auto e : test)
-        std::cout << e << " ";
-    std::cout << std::endl;
+    FastestQuicksort<Type> sort(n);
 
 
     std::vector<Type> hostData(n),backup(n),backup2(n);
@@ -74,8 +67,6 @@ int main()
         if (!err)
         {
             std::cout << "quicksort (" << n << " elements) completed successfully " << std::endl;
-            // for (int i = 0; i < 35; i++)
-             //    std::cout << hostData[i] << " ";
         }
     }
 
