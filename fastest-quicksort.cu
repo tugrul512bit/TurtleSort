@@ -578,3 +578,16 @@ __global__ void copyTasksBack(unsigned long* __restrict__ data, unsigned long* _
 
 
 
+// float data
+template
+__global__ void copyTasksBack(float* __restrict__ data, float* __restrict__ left, float* __restrict__ right, int* __restrict__ numTasks,
+    int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
+    float* __restrict__ leftLeft, float* __restrict__ rightRight);
+
+// double data
+template
+__global__ void copyTasksBack(double* __restrict__ data, double* __restrict__ left, double* __restrict__ right, int* __restrict__ numTasks,
+    int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
+    double* __restrict__ leftLeft, double* __restrict__ rightRight);
+
+

@@ -4,8 +4,8 @@
 // test program
 int main()
 {
-    using Type = unsigned int;
-    constexpr int n = 1024 * 1024*4;
+    using Type = double;
+    constexpr int n = 1024*1024;
 
     // this can sort any length of arrays up to n
     FastestQuicksort<Type> sort(n);
