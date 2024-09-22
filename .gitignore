@@ -4,3 +4,5 @@
 *.ptx
 *.cubin
 *.fatbin
+/.vs/CudaApp
+/x64/Release
