@@ -15,13 +15,17 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="fastest-quicksort.cu" />
-    <CudaCompile Include="fastest-quicksort.cuh" />
+    <CudaCompile Include="fastest-quicksort-with-index.cu" />
+    <CudaCompile Include="fastest-quicksort-with-index.cuh" />
     <CudaCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </CudaCompile>
+    <CudaCompile Include="fastest-quicksort.cu" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="fastest-quicksort.cuh" />
   </ItemGroup>
 </Project>

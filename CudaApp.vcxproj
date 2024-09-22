@@ -162,16 +162,20 @@
     </CudaLink>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <CudaCompile Include="fastest-quicksort-with-index.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="fastest-quicksort-with-index.cuh" />
+  </ItemGroup>
+  <ItemGroup>
     <CudaCompile Include="fastest-quicksort.cu" />
-  </ItemGroup>
-  <ItemGroup>
-    <CudaCompile Include="fastest-quicksort.cuh" />
-  </ItemGroup>
-  <ItemGroup>
     <CudaCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="fastest-quicksort.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
