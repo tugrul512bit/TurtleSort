@@ -49,7 +49,7 @@ struct FastestQuicksort
 	int *numTasks;
 	int maxN;
 	std::vector<Type>* toSort;
-
+	std::chrono::nanoseconds t1, t2;
 	FastestQuicksort(int maxElements)
 	{
 		maxN = maxElements;
@@ -75,6 +75,7 @@ struct FastestQuicksort
 	// arrayToSort needs to be in scope until Sync() is called
 	void StartSorting(std::vector<Type>* arrayToSort)
 	{
+		t1 = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
 		toSort = arrayToSort;
 		int numTasksHost[4] = { 1,0,1,0 };
 		int hostTasks[2] = { 0,toSort->size() - 1 };
@@ -87,10 +88,14 @@ struct FastestQuicksort
 	}
 
 	// waits for sorting to complete
-	void Sync()
+	// returns elapsed time in seconds
+	double Sync()
 	{
 		gpuErrchk(cudaDeviceSynchronize());
 		gpuErrchk(cudaMemcpy(toSort->data(), (void*)data, toSort->size() * sizeof(Type), cudaMemcpyDeviceToHost));
+		t2 = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
+		
+		return (t2.count() - t1.count()) / 1000000000.0;
 	}
 
 	~FastestQuicksort()

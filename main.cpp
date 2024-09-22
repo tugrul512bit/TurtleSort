@@ -5,7 +5,7 @@
 int main()
 {
     using Type = char;
-    constexpr int n = 1024*1024*32;
+    constexpr int n = 1024*1024*16;
 
     // this can sort any length of arrays up to n
     FastestQuicksort<Type> sort(n);
@@ -22,13 +22,13 @@ int main()
             backup2[i] = hostData[i];
         }
 
-
         size_t t1, t2, t3;
         {
-            Bench bench(&t1);
             sort.StartSorting(&hostData);
-            sort.Sync();
+            double t = sort.Sync();            
+            std::cout << "gpu-sort elapsed time = " << t << std::endl;
         }
+
         {
             Bench bench(&t2);
             std::qsort
@@ -53,7 +53,7 @@ int main()
             Bench bench(&t3);
             std::sort(backup2.begin(), backup2.end());
         }
-        std::cout << "gpu: " << t1 / 1000000000.0 << "  std::qsort:" << t2 / 1000000000.0 << "   std::sort:" << t3 / 1000000000.0 << std::endl;
+        std::cout << "std::qsort:" << t2 / 1000000000.0 << "   std::sort:" << t3 / 1000000000.0 << std::endl;
         bool err = false;
         for (int i = 0; i < n - 2; i++)
             if (hostData[i] > hostData[i + 1])

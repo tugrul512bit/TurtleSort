@@ -592,43 +592,5 @@ __global__ void copyTasksBack(double* __restrict__ data, double* __restrict__ le
 
 
 
-// makes duplicates disappear efficiently, keeps count of each
-// suppports maximum 1024 uniques at once
-// when unique values are counted, rank-sort becomes easier to code (meant for warp-scale sorting, 32 elements max)
-__global__ void uniqueficator(unsigned int * __restrict__ data, const int offset, const int n)
-{
-    const int id = threadIdx.x;
-    __shared__ bool statusFilled[1024];
-    __shared__ int statusCount[1024];
-    __shared__ int numUniques;
-    int uniqueVal = -1;
-    if (id == 0)
-    {
-        numUniques = 0;
-    }
-    statusFilled[id] = false;
-    statusCount[id] = 0;
-    __syncthreads();
-    const int nSteps = 1 + n / 1024;
-    for (int i = 0; i < nSteps; i++)
-    {
-        const int curId = i * 1024 + id;
-        if (curId < n)
-        {
-            unsigned int val = data[curId + offset];
-            if (uniqueVal == -1)
-            {
-                uniqueVal = val;
-                atomicAdd(&numUniques, 1);
-                statusCount[id] = 1;
-            }
-            else if (uniqueVal == val)
-            {
-                statusCount[id]++;
-            }
-        }
-        __syncthreads();
-    }
-}
 
 
