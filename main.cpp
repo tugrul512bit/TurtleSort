@@ -4,12 +4,12 @@
 // test program
 int main()
 {
-    using Type = double;
-    constexpr int n = 1024*1024;
+    using Type = char;
+    constexpr int n = 1024*1024*32;
 
     // this can sort any length of arrays up to n
     FastestQuicksort<Type> sort(n);
-
+    std::cout << "Check GPU boost frequency if performance drops." << std::endl;
 
     std::vector<Type> hostData(n),backup(n),backup2(n);
     for (int j = 0; j < 25; j++)
