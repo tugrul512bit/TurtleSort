@@ -15,23 +15,6 @@ This is only fastest compared to CPU-based quicksort versions and runs asynchron
 
 Test system: RTX4070, Ryzen7900, DDR5-6000 dual-channel RAM.
 
-Benchmark output:
-```
-gpu: 0.0082205  std::qsort:0.0857989   std::sort:0.0485793
-quicksort (1048576 elements) completed successfully
-gpu: 0.0081355  std::qsort:0.0863304   std::sort:0.0484651
-quicksort (1048576 elements) completed successfully
-gpu: 0.0079001  std::qsort:0.0872137   std::sort:0.0475039
-quicksort (1048576 elements) completed successfully
-gpu: 0.0078362  std::qsort:0.084857   std::sort:0.047796
-quicksort (1048576 elements) completed successfully
-gpu: 0.0077608  std::qsort:0.0846576   std::sort:0.0471589
-quicksort (1048576 elements) completed successfully
-gpu: 0.0076506  std::qsort:0.0851764   std::sort:0.0474846
-quicksort (1048576 elements) completed successfully
-gpu: 0.0083327  std::qsort:0.0846722   std::sort:0.0471619
-quicksort (1048576 elements) completed successfully
-```
 
 # Sample Code
 
@@ -62,4 +45,102 @@ output:
 ```
 Asynchronous computing...
 1 3 3 5 7
+```
+
+# Sample Benchmark Code
+
+```C++
+#include"fastest-quicksort.cuh"
+#include<algorithm>
+
+// test program
+int main()
+{
+    using Type = unsigned long;
+    constexpr int n = 1024 * 1024;
+
+    // this can sort any length of arrays up to n
+    FastestQuicksort<Type> sort(1024 * 1024);
+
+
+    std::vector<Type> hostData(n),backup(n),backup2(n);
+    for (int j = 0; j < 25; j++)
+    {
+ 
+        for (int i = 0; i < n; i++)
+        {
+            hostData[i] = rand()*rand()+rand();
+            backup[i] = hostData[i];
+            backup2[i] = hostData[i];
+        }
+
+
+        size_t t1, t2, t3;
+        {
+            Bench bench(&t1);
+            sort.StartSorting(&hostData);
+            sort.Sync();
+        }
+        {
+            Bench bench(&t2);
+            std::qsort
+            (
+                backup.data(),
+                backup.size(),
+                sizeof(decltype(backup)::value_type),
+                [](const void* x, const void* y)
+                {
+                    const int arg1 = *static_cast<const Type*>(x);
+                    const int arg2 = *static_cast<const Type*>(y);
+
+                    if (arg1 < arg2)
+                        return -1;
+                    if (arg1 > arg2)
+                        return 1;
+                    return 0;
+                }
+            );
+        }
+        {
+            Bench bench(&t3);
+            std::sort(backup2.begin(), backup2.end());
+        }
+        std::cout << "gpu: " << t1 / 1000000000.0 << "  std::qsort:" << t2 / 1000000000.0 << "   std::sort:" << t3 / 1000000000.0 << std::endl;
+        bool err = false;
+        for (int i = 0; i < n - 2; i++)
+            if (hostData[i] > hostData[i + 1])
+            {
+                std::cout << "error at: " << i << ": " << hostData[i] << " " << hostData[i + 1] << " " << hostData[i + 2] << std::endl;
+                err = true;
+                j = 1000000;
+                break;
+            }
+
+        if (!err)
+        {
+            std::cout << "quicksort (" << n << " elements) completed successfully " << std::endl;
+        }
+    }
+
+    return 0;
+}
+```
+
+
+Benchmark output:
+```
+gpu: 0.0082205  std::qsort:0.0857989   std::sort:0.0485793
+quicksort (1048576 elements) completed successfully
+gpu: 0.0081355  std::qsort:0.0863304   std::sort:0.0484651
+quicksort (1048576 elements) completed successfully
+gpu: 0.0079001  std::qsort:0.0872137   std::sort:0.0475039
+quicksort (1048576 elements) completed successfully
+gpu: 0.0078362  std::qsort:0.084857   std::sort:0.047796
+quicksort (1048576 elements) completed successfully
+gpu: 0.0077608  std::qsort:0.0846576   std::sort:0.0471589
+quicksort (1048576 elements) completed successfully
+gpu: 0.0076506  std::qsort:0.0851764   std::sort:0.0474846
+quicksort (1048576 elements) completed successfully
+gpu: 0.0083327  std::qsort:0.0846722   std::sort:0.0471619
+quicksort (1048576 elements) completed successfully
 ```
