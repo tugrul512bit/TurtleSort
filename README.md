@@ -10,8 +10,8 @@ This is only fastest compared to CPU-based quicksort versions and runs asynchron
 - Already-sorted arrays are 2x slow compared to random-initialized arrays. Being only 2x slower for 64M suggests that either the constant factor in worst-case O(n^2 x c) is very good or it is not O(n^2) anymore due to said optimizations.
 
 # Performance
-- 10x faster than std::qsort for 64M random elements
-- 5x faster than std::sort for 64M random elements
+- 10x faster than std::qsort for 64M random elements (loses some performance with index-tracking)
+- 5x faster than std::sort for 64M random elements 
 
 Test system: RTX4070, Ryzen7900, DDR5-6000 dual-channel RAM.
 
