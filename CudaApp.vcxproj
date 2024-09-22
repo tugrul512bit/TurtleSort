@@ -141,7 +141,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <CudaCompile>
-      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <ExtensibleWholeProgramCompilation>false</ExtensibleWholeProgramCompilation>
       <CodeGeneration>compute_89,sm_89</CodeGeneration>
       <Optimization>O3</Optimization>
@@ -154,6 +153,8 @@
       <MaxRegCount>
       </MaxRegCount>
       <GenerateLineInfo>true</GenerateLineInfo>
+      <Defines>QUICK_SORT_TEST</Defines>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
     </CudaCompile>
     <CudaLink>
       <Optimization>O3</Optimization>
