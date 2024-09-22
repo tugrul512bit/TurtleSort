@@ -9,7 +9,7 @@ int main()
     constexpr int n = 1024*1024;
 
 
-    // only sorts values
+    // only sorts values (faster)
     Quick::FastestQuicksort<Type> sortVal(n);
     std::vector<Type> sample = { 5,4,3,9,8,7 };
     sortVal.StartSorting(&sample);
@@ -19,7 +19,7 @@ int main()
     std::cout << std::endl;
 
 
-    // sorts & tracks id values
+    // sorts & tracks id values (slower)
     QuickIndex::FastestQuicksort<Type> sort(n);
     std::cout << "Check GPU boost frequency if performance drops." << std::endl;
 
