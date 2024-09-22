@@ -16,6 +16,17 @@ This is only fastest compared to CPU-based quicksort versions and runs asynchron
 Test system: RTX4070, Ryzen7900, DDR5-6000 dual-channel RAM.
 
 
+# Requirements
+
+Nvidia GPU with dynamic-parallelism + CUDA 12 support. 
+
+Compiler options: 
+
+- generate relocatable device code (-rdc=true)
+- compute_89, sm_89 for latest RTX cards
+- -lineinfo for debugging
+- host: /Ox highest optimization level
+
 # Sample Code
 
 ```C++
