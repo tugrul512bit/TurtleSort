@@ -5,21 +5,24 @@
 int main()
 {
     using Type = int;
-    constexpr int n = 1024*1024*64;
+    constexpr int n = 1024*1024;
 
 
-    // only sorts values (faster)
-    Quick::FastestQuicksort<Type> sortVal(n);
+    // n: number of elements supported for sorting
+    // compress: (if possible) enables nvidia's compressible memory to possibly increase effective bandwidth/cache capacity
+    bool compress = true;
+    Quick::FastestQuicksort<Type> sortVal(n, compress);
     std::vector<Type> sample = { 5,4,3,9,8,7 };
     sortVal.StartSorting(&sample);
     sortVal.Sync();
     for (auto& e : sample)
         std::cout << e << " ";
     std::cout << std::endl;
+    std::cout<<"Memory compression supported=" << sortVal.MemoryCompressionSupported() << std::endl;
 
 
-    // sorts & tracks id values (slower)
-    Quick::FastestQuicksort<Type> sort(n);
+    // compression disabled by default
+    Quick::FastestQuicksort<Type> sort(n,true);
     std::cout << "Check GPU boost frequency if performance drops." << std::endl;
 
     // sample

@@ -24,4 +24,7 @@
   <ItemGroup>
     <Text Include="LICENSE.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="helper.cuh" />
+  </ItemGroup>
 </Project>

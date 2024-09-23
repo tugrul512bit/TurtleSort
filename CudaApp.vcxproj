@@ -139,6 +139,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies);cudart.lib;cudadevrt.lib;cuda.lib</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <ExtensibleWholeProgramCompilation>false</ExtensibleWholeProgramCompilation>
@@ -160,6 +161,8 @@
     <CudaLink>
       <Optimization>O3</Optimization>
       <PerformDeviceLinkTimeOptimization>true</PerformDeviceLinkTimeOptimization>
+      <AdditionalDependencies>cuda.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(CudaToolkitBinDir)/crt;$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
     </CudaLink>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -173,6 +176,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="helper.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
