@@ -211,3 +211,7 @@ gpu: 0.006088   std::qsort:0.0850425   std::sort:0.0482559
 quicksort (1048576 elements) completed successfully
 -------------------------
 ```
+
+# CUDA Compressible Memory Test Result
+
+![because processing a sorted array is faster](https://github.com/tugrul512bit/FastestQuicksort/blob/master/qHu9lk%5B1%5D.jpg)
