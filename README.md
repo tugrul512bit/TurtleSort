@@ -18,7 +18,9 @@ Test system: RTX4070, Ryzen7900, DDR5-6000 dual-channel RAM.
 
 # Requirements
 
-Nvidia GPU with dynamic-parallelism + CUDA 12 support. 
+- GPU: Nvidia with dynamic-parallelism + CUDA 12 support. 
+- Video-memory: 700MB per 10M integer sorting, 1GB with index tracking.
+- RAM: only input vector is used as i/o.
 
 Compiler options: 
 
@@ -182,104 +184,32 @@ int main()
 
 Benchmark output:
 ```
--------------------------
-gpu-sort elapsed time = 0.0124775
-std::qsort:0.0674101   std::sort:0.0379516
+gpu-sort elapsed time = 0.0049684
+std::qsort:0.0762264   std::sort:0.0423156
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu-sort elapsed time = 0.0129493
-std::qsort:0.0689581   std::sort:0.0427465
+gpu-sort elapsed time = 0.0064597
+std::qsort:0.0772265   std::sort:0.0422133
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu-sort elapsed time = 0.0136129
-std::qsort:0.0684936   std::sort:0.0380023
+gpu-sort elapsed time = 0.0054756
+std::qsort:0.0721826   std::sort:0.0383404
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu-sort elapsed time = 0.0126742
-std::qsort:0.0689375   std::sort:0.0377938
+gpu-sort elapsed time = 0.0048388
+std::qsort:0.0714336   std::sort:0.0377244
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu-sort elapsed time = 0.0121185
-std::qsort:0.0683966   std::sort:0.0376106
+gpu-sort elapsed time = 0.0049411
+std::qsort:0.067993   std::sort:0.0382235
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu-sort elapsed time = 0.0127307
-std::qsort:0.0670079   std::sort:0.040169
+gpu-sort elapsed time = 0.0050032
+std::qsort:0.0689679   std::sort:0.0376537
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu-sort elapsed time = 0.0126643
-std::qsort:0.0679908   std::sort:0.0375375
+gpu-sort elapsed time = 0.0057136
+std::qsort:0.0703132   std::sort:0.0379545
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu-sort elapsed time = 0.0124303
-std::qsort:0.0676993   std::sort:0.0380867
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0123888
-std::qsort:0.0681775   std::sort:0.0378545
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0124053
-std::qsort:0.0682802   std::sort:0.0377692
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0126854
-std::qsort:0.067635   std::sort:0.0375062
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0121689
-std::qsort:0.0667947   std::sort:0.0379612
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0124026
-std::qsort:0.0672219   std::sort:0.0374425
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0125424
-std::qsort:0.0682399   std::sort:0.0371546
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0122665
-std::qsort:0.0682838   std::sort:0.0376951
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0128245
-std::qsort:0.0677027   std::sort:0.037129
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.012449
-std::qsort:0.068749   std::sort:0.0379262
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0123495
-std::qsort:0.0675071   std::sort:0.0376137
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0127134
-std::qsort:0.0674832   std::sort:0.0380389
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0121387
-std::qsort:0.068116   std::sort:0.0373989
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0125361
-std::qsort:0.0671925   std::sort:0.0376637
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0126504
-std::qsort:0.0675255   std::sort:0.0374682
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0124315
-std::qsort:0.0685524   std::sort:0.0374617
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0123337
-std::qsort:0.0684826   std::sort:0.0375642
-quicksort (1048576 elements) completed successfully
--------------------------
-gpu-sort elapsed time = 0.0140213
-std::qsort:0.0684202   std::sort:0.0376981
-quicksort (1048576 elements) completed successfully
 ```
