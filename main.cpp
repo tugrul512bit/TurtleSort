@@ -6,7 +6,7 @@
 int main()
 {
     using Type = int;
-    constexpr int n = 1024*64;
+    constexpr int n = 1024*1024;
 
 
     // only sorts values (faster)
@@ -39,7 +39,7 @@ int main()
         std::cout << "-------------------------" << std::endl;
         for (int i = 0; i < n; i++)
         {
-            hostData[i] = rand();
+            hostData[i] = rand()*rand()+rand();
             hostIndex[i] = hostData[i];
             backup[i].data = hostData[i];
             backup2[i].data = hostData[i];
