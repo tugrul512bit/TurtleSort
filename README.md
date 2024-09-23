@@ -81,7 +81,7 @@ int main()
     constexpr int n = 1024*1024;
 
 
-    // only sorts values
+    // only sorts values (faster)
     Quick::FastestQuicksort<Type> sortVal(n);
     std::vector<Type> sample = { 5,4,3,9,8,7 };
     sortVal.StartSorting(&sample);
@@ -91,7 +91,7 @@ int main()
     std::cout << std::endl;
 
 
-    // sorts & tracks id values
+    // sorts & tracks id values (slower)
     QuickIndex::FastestQuicksort<Type> sort(n);
     std::cout << "Check GPU boost frequency if performance drops." << std::endl;
 
@@ -111,7 +111,7 @@ int main()
         std::cout << "-------------------------" << std::endl;
         for (int i = 0; i < n; i++)
         {
-            hostData[i] = rand();
+            hostData[i] = rand()*rand()+rand();
             hostIndex[i] = hostData[i];
             backup[i].data = hostData[i];
             backup2[i].data = hostData[i];
@@ -121,9 +121,10 @@ int main()
 
         size_t t1, t2, t3;
         {
+            QuickIndex::Bench bench(&t1);           
             sort.StartSorting(&hostData,&hostIndex);
-            double t = sort.Sync();            
-            std::cout << "gpu-sort elapsed time = " << t << std::endl;
+            double t = sort.Sync();
+
         }
 
         {
@@ -150,7 +151,7 @@ int main()
             QuickIndex::Bench bench(&t3);
             std::sort(backup2.begin(), backup2.end(), [](auto& e1, auto& e2) { return e1.data < e2.data; });
         }
-        std::cout << "std::qsort:" << t2 / 1000000000.0 << "   std::sort:" << t3 / 1000000000.0 << std::endl;
+        std::cout<<"gpu: "<<t1/1000000000.0 << "   std::qsort:" << t2 / 1000000000.0 << "   std::sort:" << t3 / 1000000000.0 << std::endl;
         bool err = false, err2=false;
         for (int i = 0; i < n - 2; i++)
             if (hostData[i] > hostData[i + 1])
@@ -161,15 +162,16 @@ int main()
                 break;
             }
 
-        for (int i = 0; i < n; i++)
+        for (int i = 0; i < n ; i++)
         {
             if (hostData[i] != hostIndex[i])
             {
-                std::cout << "error: index tracking failed!!! at: "<<i<<": "<<hostIndex[i]<< std::endl;
                 err2 = true;
+                j = 1000000;
+                std::cout << "error: index calculation wrong" << std::endl;
+                break;
             }
         }
-
         if (!err && !err2)
         {
             std::cout << "quicksort (" << n << " elements) completed successfully " << std::endl;
@@ -184,32 +186,33 @@ int main()
 
 Benchmark output:
 ```
-gpu-sort elapsed time = 0.0049684
-std::qsort:0.0762264   std::sort:0.0423156
+3 4 5 7 8 9
+Check GPU boost frequency if performance drops.
+-------------------------
+gpu: 0.005535   std::qsort:0.08706   std::sort:0.0489966
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu-sort elapsed time = 0.0064597
-std::qsort:0.0772265   std::sort:0.0422133
+gpu: 0.0051853   std::qsort:0.092936   std::sort:0.048418
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu-sort elapsed time = 0.0054756
-std::qsort:0.0721826   std::sort:0.0383404
+gpu: 0.0050253   std::qsort:0.0941636   std::sort:0.0498431
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu-sort elapsed time = 0.0048388
-std::qsort:0.0714336   std::sort:0.0377244
+gpu: 0.0053617   std::qsort:0.0856727   std::sort:0.0486482
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu-sort elapsed time = 0.0049411
-std::qsort:0.067993   std::sort:0.0382235
+gpu: 0.0049196   std::qsort:0.0856767   std::sort:0.0484373
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu-sort elapsed time = 0.0050032
-std::qsort:0.0689679   std::sort:0.0376537
+gpu: 0.0047965   std::qsort:0.0858625   std::sort:0.0485127
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu-sort elapsed time = 0.0057136
-std::qsort:0.0703132   std::sort:0.0379545
+gpu: 0.0051842   std::qsort:0.0854649   std::sort:0.0481385
 quicksort (1048576 elements) completed successfully
 -------------------------
+gpu: 0.0049616   std::qsort:0.085061   std::sort:0.0484908
+quicksort (1048576 elements) completed successfully
+-------------------------
+gpu: 0.0054292   std::qsort:0.08536   std::sort:0.0481445
+quicksort (1048576 elements) completed successfully
 ```
