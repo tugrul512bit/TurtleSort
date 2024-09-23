@@ -511,19 +511,19 @@ namespace QuickIndex
                 {
                     auto idx = atomicAdd(&indexPivotLeft, 1);
                     idArrTmp[offsetPivotLeft+idx] = dataId;
-                    arrTmp[offsetPivotLeft + idx] = data;
+                    //arrTmp[offsetPivotLeft + idx] = data;
                 }
                 else if (data == pivot)
                 {
                     auto idx = atomicAdd(&indexPivot, 1);
                     idArrTmp[offsetPivot + idx] = dataId;
-                    arrTmp[offsetPivot + idx] = data;
+                    //arrTmp[offsetPivot + idx] = data;
                 }
                 else if (data == pivotRight)
                 {
                     auto idx = atomicAdd(&indexPivotRight, 1);
                     idArrTmp[offsetPivotRight + idx] = dataId;
-                    arrTmp[offsetPivotRight + idx] = data;
+                    //arrTmp[offsetPivotRight + idx] = data;
                 }
                 else
                 {
@@ -564,7 +564,18 @@ namespace QuickIndex
             const int curId = i * bd + id;
             if (curId < num)
             {
-                arr[startIncluded + curId] = arrTmp[startIncluded + curId];
+
+                if (curId >= nLeftLeft + nPivotLeft + nLeft && curId  < nLeftLeft + nPivotLeft + nLeft + nPivot)
+                    arr[startIncluded + curId] = pivot;
+                else if (curId >= nLeftLeft  && curId < nLeftLeft + nPivotLeft)
+                    arr[startIncluded + curId] = pivotLeft;
+                else if (curId >= nLeftLeft + nPivotLeft + nLeft + nPivot + nRight  && curId < nLeftLeft + nPivotLeft + nLeft + nPivot + nRight + nPivotRight)
+                    arr[startIncluded + curId] = pivotRight;
+                else
+                    arr[startIncluded + curId] = arrTmp[startIncluded + curId];
+
+
+
                 idArr[startIncluded + curId] = idArrTmp[startIncluded + curId];
             }
         }
