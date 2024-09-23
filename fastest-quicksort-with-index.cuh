@@ -10,7 +10,7 @@
 #include <cuda_device_runtime_api.h>
 #include <device_functions.h>
 
-namespace QuickIndex
+namespace Quick
 {
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 	inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort = true)
@@ -23,9 +23,9 @@ namespace QuickIndex
 	}
 
 	__global__ void resetTasks(int* tasks, int* tasks2, int* tasks3, int* tasks4, const int n);
-
+	 
 	template<typename Type>
-	__global__ void copyTasksBack(Type* __restrict__ data,int* __restrict__ numTasks,
+	__global__ void copyTasksBack(const bool trackIdValues, Type* __restrict__ data,int* __restrict__ numTasks,
 		int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
 		int* __restrict__ idData,Type*__restrict__ arrTmp,int*__restrict__ idArrTmp);
 
@@ -35,7 +35,7 @@ namespace QuickIndex
 		"fast" in context of how "free" a CPU core is
 		this sorting is asynchronous to CPU
 	*/
-	template<typename Type>
+	template<typename Type, bool TrackIndex=true>
 	struct FastestQuicksort
 	{
 
@@ -60,7 +60,8 @@ namespace QuickIndex
 		FastestQuicksort(int maxElements)
 		{
 			maxN = maxElements;
-
+			toSort = nullptr;
+			idTracker = nullptr;
 			gpuErrchk(cudaSetDevice(0));
 			gpuErrchk(cudaDeviceSynchronize());
 			gpuErrchk(cudaStreamCreateWithFlags(&stream0,cudaStreamNonBlocking));
@@ -72,9 +73,11 @@ namespace QuickIndex
 			gpuErrchk(cudaMalloc(&tasks3, maxN * sizeof(int)));
 			gpuErrchk(cudaMalloc(&tasks4, maxN * sizeof(int)));
 
-			gpuErrchk(cudaMalloc(&idData, maxN * sizeof(int)));
-			gpuErrchk(cudaMalloc(&idDataTmp, maxN * sizeof(int)));
-
+			if (TrackIndex)
+			{
+				gpuErrchk(cudaMalloc(&idData, maxN * sizeof(int)));
+				gpuErrchk(cudaMalloc(&idDataTmp, maxN * sizeof(int)));
+			}
 
 
 
@@ -87,7 +90,7 @@ namespace QuickIndex
 		// arrayToSort: this array is sorted by comparing its element values
 		// indicesToTrack: this array's elements follow same path with arrayToSort to be used for sorting objects
 		// sizes of two arrays have to be same
-		void StartSorting(std::vector<Type>* arrayToSort, std::vector<int>* indicesToTrack)
+		void StartSorting(std::vector<Type>* arrayToSort, std::vector<int>* indicesToTrack=nullptr)
 		{
 			t1 = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
 			toSort = arrayToSort;
@@ -100,10 +103,13 @@ namespace QuickIndex
 			gpuErrchk(cudaMemcpy((void*)numTasks, numTasksHost, 4 * sizeof(int), cudaMemcpyHostToDevice));
 			gpuErrchk(cudaMemcpy((void*)tasks2, hostTasks, 2 * sizeof(int), cudaMemcpyHostToDevice));
 
-			gpuErrchk(cudaMemcpy((void*)idData, indicesToTrack->data(), indicesToTrack->size() * sizeof(int), cudaMemcpyHostToDevice));
+			if(TrackIndex && idTracker !=nullptr)
+				gpuErrchk(cudaMemcpy((void*)idData, indicesToTrack->data(), indicesToTrack->size() * sizeof(int), cudaMemcpyHostToDevice));
 
-			copyTasksBack << <1, 1024,0,stream0 >> > (
-				data, numTasks, tasks, tasks2, tasks3, tasks4,idData, dataTmp, idDataTmp);
+			if (TrackIndex && idTracker != nullptr)
+				copyTasksBack << <1, 1024,0,stream0 >> > (1,data, numTasks, tasks, tasks2, tasks3, tasks4,idData, dataTmp, idDataTmp);
+			else
+				copyTasksBack << <1, 1024, 0, stream0 >> > (0, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, dataTmp, idDataTmp);
 
 		}
 
@@ -114,9 +120,11 @@ namespace QuickIndex
 			gpuErrchk(cudaStreamSynchronize(stream0));
 			//gpuErrchk(cudaDeviceSynchronize());
 			gpuErrchk(cudaMemcpy(toSort->data(), (void*)data, toSort->size() * sizeof(Type), cudaMemcpyDeviceToHost));
-			gpuErrchk(cudaMemcpy(idTracker->data(), (void*)idData, idTracker->size() * sizeof(int), cudaMemcpyDeviceToHost));
+			if (TrackIndex && idTracker != nullptr)
+				gpuErrchk(cudaMemcpy(idTracker->data(), (void*)idData, idTracker->size() * sizeof(int), cudaMemcpyDeviceToHost));
 			t2 = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
-
+			toSort = nullptr;
+			idTracker = nullptr;
 			return (t2.count() - t1.count()) / 1000000000.0;
 		}
 

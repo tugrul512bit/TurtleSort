@@ -1,4 +1,3 @@
-#include"fastest-quicksort.cuh" 
 #include"fastest-quicksort-with-index.cuh" 
 #include<algorithm>
 
@@ -20,7 +19,7 @@ int main()
 
 
     // sorts & tracks id values (slower)
-    QuickIndex::FastestQuicksort<Type> sort(n);
+    Quick::FastestQuicksort<Type> sort(n);
     std::cout << "Check GPU boost frequency if performance drops." << std::endl;
 
     // sample
@@ -39,7 +38,7 @@ int main()
         std::cout << "-------------------------" << std::endl;
         for (int i = 0; i < n; i++)
         {
-            hostData[i] = rand();
+            hostData[i] = rand()*rand()+rand();
             hostIndex[i] = hostData[i];
             backup[i].data = hostData[i];
             backup2[i].data = hostData[i];
@@ -49,14 +48,14 @@ int main()
 
         size_t t1, t2, t3;
         {
-            QuickIndex::Bench bench(&t1);
-            sort.StartSorting(&hostData, &hostIndex);
+            Quick::Bench bench(&t1);
+            sort.StartSorting(&hostData,&hostIndex);
             double t = sort.Sync();
 
         }
 
         {
-            QuickIndex::Bench bench(&t2);
+            Quick::Bench bench(&t2);
             std::qsort
             (
                 backup.data(),
@@ -76,7 +75,7 @@ int main()
             );
         }
         {
-            QuickIndex::Bench bench(&t3);
+            Quick::Bench bench(&t3);
             std::sort(backup2.begin(), backup2.end(), [](auto& e1, auto& e2) { return e1.data < e2.data; });
         }
         std::cout << "gpu: " << t1 / 1000000000.0 << "   std::qsort:" << t2 / 1000000000.0 << "   std::sort:" << t3 / 1000000000.0 << std::endl;

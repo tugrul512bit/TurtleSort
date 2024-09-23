@@ -20,12 +20,8 @@
     <CudaCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </CudaCompile>
-    <CudaCompile Include="fastest-quicksort.cu" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="fastest-quicksort.cuh" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 
 #include"fastest-quicksort-with-index.cuh"
 
-namespace QuickIndex
+namespace Quick
 {
     // maximum number of elements going into brute-force chunks
     constexpr int BRUTE_FORCE_LIMIT = 128;
@@ -18,19 +18,24 @@ namespace QuickIndex
     //              block 0     block 1     block 2     block 3     ---> cuda blocks
     template<typename Type>
     __global__ void quickSortWithoutStreamCompaction(
+        const bool trackIdValues,
         Type* __restrict__ arr, int* __restrict__ numTasks,
         int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
         int* __restrict__ idData,
         Type* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     template<typename Type>
-    __global__ void bruteSort(Type* __restrict__ arr, int* __restrict__ numTasks,
+    __global__ void bruteSort(
+        const bool trackIdValues,
+        Type* __restrict__ arr, int* __restrict__ numTasks,
         int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,        
         int* __restrict__ idData,
         Type* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     template<typename Type>
-    __global__ void resetNumTasks(Type* __restrict__ data, int* __restrict__ numTasks,
+    __global__ void resetNumTasks(
+        const bool trackIdValues,
+        Type* __restrict__ data, int* __restrict__ numTasks,
         int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,        
         int* __restrict__ idData,
         Type* __restrict__ arrTmp, int* __restrict__ idArrTmp)
@@ -49,21 +54,21 @@ namespace QuickIndex
             __syncthreads();
 
             if (numTasks[3] > 0)
-                bruteSort << <numTasks[3], BRUTE_FORCE_LIMIT, 0, cudaStreamFireAndForget >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                bruteSort << <numTasks[3], BRUTE_FORCE_LIMIT, 0, cudaStreamFireAndForget >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
 
 
             if (numTasks[2] > 0)
             {
-                quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, cudaStreamTailLaunch >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, cudaStreamTailLaunch >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
                 /*
                 if (numTask1 < 64)
-                    quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, cudaStreamTailLaunch >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, cudaStreamTailLaunch >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
                 else if (numTask1 < 64 * 16)
-                    quickSortWithoutStreamCompaction << <numTasks[2], 512, 0, cudaStreamTailLaunch >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    quickSortWithoutStreamCompaction << <numTasks[2], 512, 0, cudaStreamTailLaunch >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
                 else if (numTask1 < 64 * 16 * 16)
-                    quickSortWithoutStreamCompaction << <numTasks[2], 256, 0, cudaStreamTailLaunch >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    quickSortWithoutStreamCompaction << <numTasks[2], 256, 0, cudaStreamTailLaunch >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
                 else
-                    quickSortWithoutStreamCompaction << <numTasks[2], DIRECTLY_COMPUTE_LIMIT, 0, cudaStreamTailLaunch >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    quickSortWithoutStreamCompaction << <numTasks[2], DIRECTLY_COMPUTE_LIMIT, 0, cudaStreamTailLaunch >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
               */
 
             }
@@ -73,10 +78,9 @@ namespace QuickIndex
     }
 
 
-
-
     template<typename Type>
-    __global__ void copyTasksBack(Type* __restrict__ data, int* __restrict__ numTasks,
+    __global__ void copyTasksBack(
+        const bool trackIdValues, Type* __restrict__ data, int* __restrict__ numTasks,
         int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
         int* __restrict__ idData,
         Type* __restrict__ arrTmp, int* __restrict__ idArrTmp)
@@ -115,7 +119,7 @@ namespace QuickIndex
         {
 
             resetNumTasks << <1, 1, 0, cudaStreamTailLaunch >> > (
-                data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
         }
 
     }
@@ -126,7 +130,9 @@ namespace QuickIndex
 #define compSw(a,x,y,b) if(a[y]<a[x]){ auto t = a[x];a[x]=a[y];a[y]=t; auto u = b[x];b[x]=b[y];b[y]=u;}
 
     template<typename Type>
-    __global__ void bruteSort(Type* __restrict__ arr, int* __restrict__ numTasks,
+    __global__ void bruteSort(
+        const bool trackIdValues,
+        Type* __restrict__ arr, int* __restrict__ numTasks,
         int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
         int* __restrict__ idArr,
         Type* __restrict__ arrTmp, int* __restrict__ idArrTmp)
@@ -160,7 +166,8 @@ namespace QuickIndex
         if (startIncluded + id <= stopIncluded)
         {
             cache[id] = arr[startIncluded + id];
-            idTracker[id] = idArr[startIncluded + id];
+            if(trackIdValues)
+                idTracker[id] = idArr[startIncluded + id];
         }
         __syncthreads();
 
@@ -189,7 +196,8 @@ namespace QuickIndex
         if (startIncluded + id <= stopIncluded)
         {
             arr[startIncluded + id] = cache[id];
-            idArr[startIncluded + id] = idTracker[id];
+            if (trackIdValues)
+                idArr[startIncluded + id] = idTracker[id];
         }
     }
 
@@ -290,6 +298,7 @@ namespace QuickIndex
     //              block 0     block 1     block 2     block 3     ---> cuda blocks
     template<typename Type>
     __global__ void quickSortWithoutStreamCompaction(
+        const bool trackIdValues,
         Type* __restrict__ arr, int* __restrict__ numTasks,
         int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
         int* __restrict__ idArr,
@@ -301,7 +310,7 @@ namespace QuickIndex
         const int bd = blockDim.x;
 
         if (id == 0 && gid == 0)
-            copyTasksBack << <1, 1024, 0, cudaStreamTailLaunch >> > (arr, numTasks, tasks, tasks2, tasks3, tasks4, idArr, arrTmp, idArrTmp);
+            copyTasksBack << <1, 1024, 0, cudaStreamTailLaunch >> > (trackIdValues, arr, numTasks, tasks, tasks2, tasks3, tasks4, idArr, arrTmp, idArrTmp);
 
 
         __shared__ int taskIdCacheStart;
@@ -334,24 +343,49 @@ namespace QuickIndex
         {
 
             // warp-level odd-even parallel sort
-            for (int i = 0; i < num; i++)
+            if (trackIdValues)
             {
-                if (id + 1 < num)
+                for (int i = 0; i < num; i++)
                 {
-                    if ((id % 2 == 0))
+                    if (id + 1 < num)
                     {
-                        compSw(arr, startIncluded+id, startIncluded+id + 1, idArr);
+                        if ((id % 2 == 0))
+                        {
+                            compSw(arr, startIncluded + id, startIncluded + id + 1, idArr);
+                        }
                     }
+                    __syncthreads();
+                    if (id + 1 < num)
+                    {
+                        if ((id % 2 == 1))
+                        {
+                            compSw(arr, startIncluded + id, startIncluded + id + 1, idArr);
+                        }
+                    }
+                    __syncthreads();
                 }
-                __syncthreads();
-                if (id + 1 < num)
+            }
+            else
+            {
+                for (int i = 0; i < num; i++)
                 {
-                    if ((id % 2 == 1))
+                    if (id + 1 < num)
                     {
-                        compSw(arr, startIncluded+id, startIncluded+id + 1, idArr);
+                        if ((id % 2 == 0))
+                        {
+                            compareSwap(arr, startIncluded + id, startIncluded + id + 1);
+                        }
                     }
+                    __syncthreads();
+                    if (id + 1 < num)
+                    {
+                        if ((id % 2 == 1))
+                        {
+                            compareSwap(arr, startIncluded + id, startIncluded + id + 1);
+                        }
+                    }
+                    __syncthreads();
                 }
-                __syncthreads();
             }
             return;
         }
@@ -365,15 +399,11 @@ namespace QuickIndex
         __shared__ int indexRightRight;
 
         __shared__ Type pivotLoad[3];
-        __shared__ int idLoad[3];
         if (id == 0)
         {
             pivotLoad[0] = arr[startIncluded + (stopIncluded - startIncluded + 1) / 2];
             pivotLoad[1] = arr[startIncluded];
             pivotLoad[2] = arr[stopIncluded];
-            idLoad[0] = idArr[startIncluded + (stopIncluded - startIncluded + 1) / 2];
-            idLoad[1] = idArr[startIncluded];
-            idLoad[2] = idArr[stopIncluded];
             compareSwap(pivotLoad, 0, 1);
             compareSwap(pivotLoad, 0, 2);
             compareSwap(pivotLoad, 1, 2);
@@ -417,39 +447,32 @@ namespace QuickIndex
                 const Type data = arr[curId + startIncluded];                
                 if (data == pivotLeft)
                 {
-                    //atomicAdd(&indexPivotLeft, 1);
                     countPivotLeft++;
                 }
                 else if (data == pivot)
                 {
-                    //atomicAdd(&indexPivot, 1);
                     countPivot++;
                 }
                 else if (data == pivotRight)
                 {
-                    //atomicAdd(&indexPivotRight, 1);
                     countPivotRight++;
                 }
                 else
                 {
                     if (data < pivotLeft)
                     {
-                        //atomicAdd(&indexLeftLeft, 1);
                         countLeftLeft++;
                     }
                     else if (data < pivot)
                     {
-                        //atomicAdd(&indexLeft, 1);
                         countLeft++;
                     }
                     else if (data < pivotRight)
                     {
-                        //atomicAdd(&indexRight, 1);
                         countRight++;
                     }
                     else if (data > pivotRight)
                     {
-                        //atomicAdd(&indexRightRight, 1);
                         countRightRight++;
                     }
                 }
@@ -504,51 +527,58 @@ namespace QuickIndex
             if (curId < num)
             {
                 const Type data = arr[curId + startIncluded];
-                const int dataId = idArr[curId + startIncluded];
+                int dataId = 0;
+                if(trackIdValues)
+                    dataId = idArr[curId + startIncluded];
                 // todo: pivot values are known so they are "counting", no need to copy values anywhere
                 // but id values will be required
                 if (data == pivotLeft)
                 {
                     auto idx = atomicAdd(&indexPivotLeft, 1);
-                    idArrTmp[offsetPivotLeft+idx] = dataId;
-                    //arrTmp[offsetPivotLeft + idx] = data;
+                    if (trackIdValues)
+                        idArrTmp[offsetPivotLeft+idx] = dataId;
+
                 }
                 else if (data == pivot)
                 {
                     auto idx = atomicAdd(&indexPivot, 1);
-                    idArrTmp[offsetPivot + idx] = dataId;
-                    //arrTmp[offsetPivot + idx] = data;
+                    if (trackIdValues)
+                        idArrTmp[offsetPivot + idx] = dataId;
                 }
                 else if (data == pivotRight)
                 {
                     auto idx = atomicAdd(&indexPivotRight, 1);
-                    idArrTmp[offsetPivotRight + idx] = dataId;
-                    //arrTmp[offsetPivotRight + idx] = data;
+                    if (trackIdValues)
+                        idArrTmp[offsetPivotRight + idx] = dataId;                    
                 }
                 else
                 {
                     if (data < pivotLeft)
                     {
                         auto idx = atomicAdd(&indexLeftLeft, 1);
-                        idArrTmp[offsetLeftLeft + idx] = dataId;
+                        if (trackIdValues)
+                            idArrTmp[offsetLeftLeft + idx] = dataId;
                         arrTmp[offsetLeftLeft + idx] = data;
                     }
                     else if (data < pivot)
                     {
                         auto idx = atomicAdd(&indexLeft, 1);
-                        idArrTmp[offsetLeft + idx] = dataId;
+                        if (trackIdValues)
+                            idArrTmp[offsetLeft + idx] = dataId;
                         arrTmp[offsetLeft + idx] = data;
                     }
                     else if (data < pivotRight)
                     {
                         auto idx = atomicAdd(&indexRight, 1);
-                        idArrTmp[offsetRight + idx] = dataId;
+                        if (trackIdValues)
+                            idArrTmp[offsetRight + idx] = dataId;
                         arrTmp[offsetRight + idx] = data;
                     }
                     else if (data > pivotRight)
                     {
                         auto idx = atomicAdd(&indexRightRight, 1);
-                        idArrTmp[offsetRightRight + idx] = dataId;
+                        if (trackIdValues)
+                            idArrTmp[offsetRightRight + idx] = dataId;
                         arrTmp[offsetRightRight + idx] = data;
                     }
                 }
@@ -575,8 +605,8 @@ namespace QuickIndex
                     arr[startIncluded + curId] = arrTmp[startIncluded + curId];
 
 
-
-                idArr[startIncluded + curId] = idArrTmp[startIncluded + curId];
+                if (trackIdValues)
+                    idArr[startIncluded + curId] = idArrTmp[startIncluded + curId];
             }
         }
         __syncthreads();
@@ -695,28 +725,36 @@ namespace QuickIndex
 
     // int data
     template
-        __global__ void copyTasksBack(int* __restrict__ data, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(
+            const bool trackIdValues, 
+            int* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
             int* __restrict__ idData,
             int* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     // short data
     template
-        __global__ void copyTasksBack(short* __restrict__ data, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(
+            const bool trackIdValues,
+            short* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
             int* __restrict__ idData,
             short* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     // char data
     template
-        __global__ void copyTasksBack(char* __restrict__ data, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(
+            const bool trackIdValues,
+            char* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
             int* __restrict__ idData,
             char* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     // long data
     template
-        __global__ void copyTasksBack(long* __restrict__ data, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(
+            const bool trackIdValues,
+            long* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,            
             int* __restrict__ idData,
             long* __restrict__ arrTmp, int* __restrict__ idArrTmp);
@@ -732,28 +770,36 @@ namespace QuickIndex
 
     // unsigned int
     template
-        __global__ void copyTasksBack(unsigned int* __restrict__ data, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(
+            const bool trackIdValues,
+            unsigned int* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
             int* __restrict__ idData,
             unsigned int* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     // unsigned short data
     template
-        __global__ void copyTasksBack(unsigned short* __restrict__ data, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(
+            const bool trackIdValues,
+            unsigned short* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
             int* __restrict__ idData,
             unsigned short* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     // unsigned char data
     template
-        __global__ void copyTasksBack(unsigned char* __restrict__ data,int* __restrict__ numTasks,
+        __global__ void copyTasksBack(
+            const bool trackIdValues,
+            unsigned char* __restrict__ data,int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
             int* __restrict__ idData,
             unsigned char* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     // unsigned long data
     template
-        __global__ void copyTasksBack(unsigned long* __restrict__ data, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(
+            const bool trackIdValues,
+            unsigned long* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,            
             int* __restrict__ idData,
             unsigned long* __restrict__ arrTmp, int* __restrict__ idArrTmp);
@@ -762,14 +808,18 @@ namespace QuickIndex
 
     // float data
     template
-        __global__ void copyTasksBack(float* __restrict__ data, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(
+            const bool trackIdValues,
+            float* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
             int* __restrict__ idData,
             float* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     // double data
     template
-        __global__ void copyTasksBack(double* __restrict__ data, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(
+            const bool trackIdValues,
+            double* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
             int* __restrict__ idData,
             double* __restrict__ arrTmp, int* __restrict__ idArrTmp);
