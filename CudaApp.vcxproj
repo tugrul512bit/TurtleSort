@@ -155,6 +155,7 @@
       <GenerateLineInfo>true</GenerateLineInfo>
       <Defines>QUICK_SORT_TEST</Defines>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+      <PtxAsOptionV>true</PtxAsOptionV>
     </CudaCompile>
     <CudaLink>
       <Optimization>O3</Optimization>

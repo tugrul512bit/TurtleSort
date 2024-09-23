@@ -194,35 +194,70 @@ namespace QuickIndex
     }
 
 
-    __device__ void reductionWithBlock2x(
-        int count, int * countCache,
-        int count2, int* countCache2,
+    __device__ void reductionWithBlock7x(
+         const int count,  int* countCache,
+         const int count2, int* countCache2,
+         const int count3, int* countCache3,
+         const int count4, int* countCache4,
+         const int count5, int* countCache5,
+         const int count6, int* countCache6,
+         const int count7, int* countCache7,
+
         const int id, const int bd,
-        int * output, int * output2)
-    {
-        
+
+        int* output,  int* output2,
+        int* output3, int* output4,
+        int* output5, int* output6,
+        int* output7)
+    {        
         int wSum = count;
         int wSum2 = count2;
+        int wSum3 = count3;
+        int wSum4 = count4;
+        int wSum5 = count5;
+        int wSum6 = count6;
+        int wSum7 = count7;
         for (unsigned int wOfs = 16; wOfs > 0; wOfs >>= 1)
         {
             wSum += __shfl_down_sync(0xffffffff, wSum, wOfs);
             wSum2 += __shfl_down_sync(0xffffffff, wSum2, wOfs);
+            wSum3 += __shfl_down_sync(0xffffffff, wSum3, wOfs);
+            wSum4 += __shfl_down_sync(0xffffffff, wSum4, wOfs);
+            wSum5 += __shfl_down_sync(0xffffffff, wSum5, wOfs);
+            wSum6 += __shfl_down_sync(0xffffffff, wSum6, wOfs);
+            wSum7 += __shfl_down_sync(0xffffffff, wSum7, wOfs);
+
         }
         __syncthreads();
         if (id % 32 == 0)
         {
             countCache[id / 32] = wSum;
             countCache2[id / 32] = wSum2;
+            countCache3[id / 32] = wSum3;
+            countCache4[id / 32] = wSum4;
+            countCache5[id / 32] = wSum5;
+            countCache6[id / 32] = wSum6;
+            countCache7[id / 32] = wSum7;
         }
         __syncthreads();
         if (id < 32)
         {
             wSum = countCache[id];
             wSum2 = countCache2[id];
+            wSum3 = countCache3[id];
+            wSum4 = countCache4[id];
+            wSum5 = countCache5[id];
+            wSum6 = countCache6[id];
+            wSum7 = countCache7[id];
             for (unsigned int wOfs = 16; wOfs > 0; wOfs >>= 1)
             {
                 wSum += __shfl_down_sync(0xffffffff, wSum, wOfs);
                 wSum2 += __shfl_down_sync(0xffffffff, wSum2, wOfs);
+                wSum3 += __shfl_down_sync(0xffffffff, wSum3, wOfs);
+                wSum4 += __shfl_down_sync(0xffffffff, wSum4, wOfs);
+                wSum5 += __shfl_down_sync(0xffffffff, wSum5, wOfs);
+                wSum6 += __shfl_down_sync(0xffffffff, wSum6, wOfs);
+                wSum7 += __shfl_down_sync(0xffffffff, wSum7, wOfs);
             }
         }
         __syncthreads();
@@ -230,53 +265,24 @@ namespace QuickIndex
         {
             countCache[0] = wSum;
             countCache2[0] = wSum2;
+            countCache3[0] = wSum3;
+            countCache4[0] = wSum4;
+            countCache5[0] = wSum5;
+            countCache6[0] = wSum6;
+            countCache7[0] = wSum7;
         }
         __syncthreads();
         *output = countCache[0];
         *output2 = countCache2[0];        
+        *output3 = countCache3[0];
+        *output4 = countCache4[0];
+        *output5 = countCache5[0];
+        *output6 = countCache6[0];
+        *output7 = countCache7[0];
         return;
     }
 
 
-
-    __device__ void reductionWithBlock1x(
-        int count, int* countCache,
-        const int id, const int bd,
-        int* output)
-    {
-
-        int wSum = count;
-
-        for (unsigned int wOfs = 16; wOfs > 0; wOfs >>= 1)
-        {
-            wSum += __shfl_down_sync(0xffffffff, wSum, wOfs);
-        }
-        __syncthreads();
-        if (id % 32 == 0)
-        {
-            countCache[id / 32] = wSum;
-
-        }
-        __syncthreads();
-        if (id < 32)
-        {
-            wSum = countCache[id];
-
-            for (unsigned int wOfs = 16; wOfs > 0; wOfs >>= 1)
-            {
-                wSum += __shfl_down_sync(0xffffffff, wSum, wOfs);
-            }
-        }
-        __syncthreads();
-        if (id == 0)
-        {
-            countCache[0] = wSum;
-        }
-        __syncthreads();
-        *output = countCache[0];
-
-        return;
-    }
 
     // task pattern: 
     //              task 0      task 1      task 2      task 3      ---> array chunks to sort (no overlap)
@@ -453,6 +459,11 @@ namespace QuickIndex
         __syncthreads();
         __shared__ int countCache[32];
         __shared__ int countCache2[32];
+        __shared__ int countCache3[32];
+        __shared__ int countCache4[32];
+        __shared__ int countCache5[32];
+        __shared__ int countCache6[32];
+        __shared__ int countCache7[32];
 
         // sum of all counts (reducing number of atomicAdd calls)
         int nLeftLeft = 0;
@@ -462,14 +473,21 @@ namespace QuickIndex
         int nRight = 0;
         int nPivotRight = 0;
         int nRightRight = 0;
-        reductionWithBlock2x(countLeftLeft, countCache, countPivotLeft, countCache2, id, bd, &nLeftLeft, &nPivotLeft);
-        reductionWithBlock2x(countLeft, countCache, countPivot, countCache2, id, bd, &nLeft, &nPivot);
-        reductionWithBlock2x(countRight, countCache, countPivotRight, countCache2, id, bd, &nRight, &nPivotRight);
-        reductionWithBlock1x(countRightRight, countCache, id, bd, &nRightRight);
+        reductionWithBlock7x(
+            countLeftLeft, countCache, 
+            countPivotLeft, countCache2, 
+            countLeft, countCache3,
+            countPivot,countCache4,
+            countRight, countCache5,
+            countPivotRight, countCache6,
+            countRightRight, countCache7,
 
-
-
-
+            id, bd, 
+            
+            &nLeftLeft, &nPivotLeft,
+            &nLeft, &nPivot,
+            &nRight, &nPivotRight,
+            &nRightRight);
 
         const int offsetLeftLeft = startIncluded;
         const int offsetPivotLeft = offsetLeftLeft+nLeftLeft;
