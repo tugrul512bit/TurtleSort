@@ -21,8 +21,8 @@ Test system: RTX4070, Ryzen7900, DDR5-6000 dual-channel RAM.
 # Requirements
 
 - GPU: Nvidia with dynamic-parallelism + CUDA 12 support. 
-- Video-memory: currently too much but is being optimized (2GB per 32M elements for index-tracked version, higher for simple version for now)
-- RAM: only input vector is used as i/o.
+- Video-memory: 2GB per 32M elements for index-tracked version
+- RAM: only value vector and index vector are used as i/o.
 
 Compiler options: 
 
@@ -32,16 +32,11 @@ Compiler options:
 - host: /Ox highest optimization level
 - release mode, x64 selected
 
-# Headers
-
-fastest-quicksort.cuh: In ```Quick``` namespace, ```FastestQuicksort``` struct can be initialized with a maximum size to sort. Then any sized array can be sorted by ```StartSorting``` method and synchronized with ```Sync``` method.
-
-fastest-quicksort-with-index.cuh: In ```QuickIndex``` namespace, same method takes a second vector for index values. Indices follow same data path as the data. But it works as SOA rather than AOS (unlike std::sort or std::qsort).
   
 # Sample Code
 
 ```C++
-#include"fastest-quicksort.cuh"
+#include"fastest-quicksort-with-index.cuh"
 #include<vector>
 
 // test program
@@ -72,7 +67,6 @@ Asynchronous computing...
 # Sample Benchmark Code
 
 ```C++
-#include"fastest-quicksort.cuh" 
 #include"fastest-quicksort-with-index.cuh" 
 #include<algorithm>
 
@@ -80,7 +74,7 @@ Asynchronous computing...
 int main()
 {
     using Type = int;
-    constexpr int n = 1024*1024;
+    constexpr int n = 1024 * 1024;
 
 
     // only sorts values (faster)
@@ -94,7 +88,7 @@ int main()
 
 
     // sorts & tracks id values (slower)
-    QuickIndex::FastestQuicksort<Type> sort(n);
+    Quick::FastestQuicksort<Type> sort(n);
     std::cout << "Check GPU boost frequency if performance drops." << std::endl;
 
     // sample
@@ -123,14 +117,14 @@ int main()
 
         size_t t1, t2, t3;
         {
-            QuickIndex::Bench bench(&t1);           
+            Quick::Bench bench(&t1);
             sort.StartSorting(&hostData,&hostIndex);
             double t = sort.Sync();
 
         }
 
         {
-            QuickIndex::Bench bench(&t2);
+            Quick::Bench bench(&t2);
             std::qsort
             (
                 backup.data(),
@@ -150,11 +144,11 @@ int main()
             );
         }
         {
-            QuickIndex::Bench bench(&t3);
+            Quick::Bench bench(&t3);
             std::sort(backup2.begin(), backup2.end(), [](auto& e1, auto& e2) { return e1.data < e2.data; });
         }
-        std::cout<<"gpu: "<<t1/1000000000.0 << "   std::qsort:" << t2 / 1000000000.0 << "   std::sort:" << t3 / 1000000000.0 << std::endl;
-        bool err = false, err2=false;
+        std::cout << "gpu: " << t1 / 1000000000.0 << "   std::qsort:" << t2 / 1000000000.0 << "   std::sort:" << t3 / 1000000000.0 << std::endl;
+        bool err = false, err2 = false;
         for (int i = 0; i < n - 2; i++)
             if (hostData[i] > hostData[i + 1])
             {
@@ -164,7 +158,7 @@ int main()
                 break;
             }
 
-        for (int i = 0; i < n ; i++)
+        for (int i = 0; i < n; i++)
         {
             if (hostData[i] != hostIndex[i])
             {
@@ -191,30 +185,28 @@ Benchmark output:
 3 4 5 7 8 9
 Check GPU boost frequency if performance drops.
 -------------------------
-gpu: 0.005535   std::qsort:0.08706   std::sort:0.0489966
+gpu: 0.0066718   std::qsort:0.0915443   std::sort:0.048749
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu: 0.0051853   std::qsort:0.092936   std::sort:0.048418
+gpu: 0.0064463   std::qsort:0.0866981   std::sort:0.0479999
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu: 0.0050253   std::qsort:0.0941636   std::sort:0.0498431
+gpu: 0.0061927   std::qsort:0.0886507   std::sort:0.0486271
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu: 0.0053617   std::qsort:0.0856727   std::sort:0.0486482
+gpu: 0.0063537   std::qsort:0.088749   std::sort:0.0481332
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu: 0.0049196   std::qsort:0.0856767   std::sort:0.0484373
+gpu: 0.0059417   std::qsort:0.0854366   std::sort:0.0482088
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu: 0.0047965   std::qsort:0.0858625   std::sort:0.0485127
+gpu: 0.0060215   std::qsort:0.0855356   std::sort:0.0479987
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu: 0.0051842   std::qsort:0.0854649   std::sort:0.0481385
+gpu: 0.0063543   std::qsort:0.085381   std::sort:0.0478905
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu: 0.0049616   std::qsort:0.085061   std::sort:0.0484908
+gpu: 0.006088   std::qsort:0.0850425   std::sort:0.0482559
 quicksort (1048576 elements) completed successfully
 -------------------------
-gpu: 0.0054292   std::qsort:0.08536   std::sort:0.0481445
-quicksort (1048576 elements) completed successfully
 ```
