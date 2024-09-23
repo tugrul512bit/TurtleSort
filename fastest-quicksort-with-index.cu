@@ -3,10 +3,11 @@
 
 namespace QuickIndex
 {
-    // in-kernel memory consumption increases with index-tracking
-    // tuned down for better occupancy of SM units
-    constexpr int BRUTE_FORCE_LIMIT = 256; 
+    // maximum number of elements going into brute-force chunks
+    constexpr int BRUTE_FORCE_LIMIT = 128; 
 
+    // maximum number of elements directly computed without any task mechanics
+    constexpr int DIRECTLY_COMPUTE_LIMIT = 16;
 
 
     // task pattern: 
@@ -15,28 +16,22 @@ namespace QuickIndex
     //              block 0     block 1     block 2     block 3     ---> cuda blocks
     template<typename Type>
     __global__ void quickSortWithoutStreamCompaction(
-        Type* __restrict__ arr, Type* __restrict__ left, Type* __restrict__ right, int* __restrict__ numTasks,
+        Type* __restrict__ arr, int* __restrict__ numTasks,
         int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-        Type* __restrict__ leftLeft, Type* __restrict__ rightRight,
-        int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-        int* __restrict__ idRight, int* __restrict__ idRightRight,
-        int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight);
+        int* __restrict__ idData,
+        Type* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     template<typename Type>
-    __global__ void bruteSort(Type* __restrict__ arr, Type* __restrict__ left, Type* __restrict__ right, int* __restrict__ numTasks,
-        int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-        Type* __restrict__ leftLeft, Type* __restrict__ rightRight,
-        int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-        int* __restrict__ idRight, int* __restrict__ idRightRight,
-        int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight);
+    __global__ void bruteSort(Type* __restrict__ arr, int* __restrict__ numTasks,
+        int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,        
+        int* __restrict__ idData,
+        Type* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     template<typename Type>
-    __global__ void resetNumTasks(Type* __restrict__ data, Type* __restrict__ left, Type* __restrict__ right, int* __restrict__ numTasks,
-        int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-        Type* __restrict__ leftLeft, Type* __restrict__ rightRight,
-        int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-        int* __restrict__ idRight, int* __restrict__ idRightRight,
-        int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight)
+    __global__ void resetNumTasks(Type* __restrict__ data, int* __restrict__ numTasks,
+        int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,        
+        int* __restrict__ idData,
+        Type* __restrict__ arrTmp, int* __restrict__ idArrTmp)
     {
         int numTask1 = 0;
         int numTask2 = 0;
@@ -52,23 +47,22 @@ namespace QuickIndex
             __syncthreads();
 
             if (numTasks[3] > 0)
-                bruteSort << <numTasks[3], BRUTE_FORCE_LIMIT, 0, cudaStreamFireAndForget >> > (data, left, right, numTasks, tasks, tasks2, tasks3, tasks4, leftLeft, rightRight, idData, idLeftLeft, idLeft, idRight, idRightRight, idPivotLeft, idPivot, idPivotRight);
+                bruteSort << <numTasks[3], BRUTE_FORCE_LIMIT, 0, cudaStreamFireAndForget >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
 
 
             if (numTasks[2] > 0)
             {
-                //quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, cudaStreamTailLaunch >> > (data, left, right, numTasks, tasks, tasks2, tasks3, tasks4,leftLeft,rightRight,idData, idLeftLeft,idLeft,idRight,idRightRight,idPivotLeft,idPivot,idPivotRight);
-
+                //quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, cudaStreamTailLaunch >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                
                 if (numTask1 < 64)
-                    quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, cudaStreamTailLaunch >> > (data, left, right, numTasks, tasks, tasks2, tasks3, tasks4, leftLeft, rightRight, idData, idLeftLeft, idLeft, idRight, idRightRight, idPivotLeft, idPivot, idPivotRight);
+                    quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, cudaStreamTailLaunch >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
                 else if (numTask1 < 64 * 16)
-                    quickSortWithoutStreamCompaction << <numTasks[2], 512, 0, cudaStreamTailLaunch >> > (data, left, right, numTasks, tasks, tasks2, tasks3, tasks4, leftLeft, rightRight, idData, idLeftLeft, idLeft, idRight, idRightRight, idPivotLeft, idPivot, idPivotRight);
+                    quickSortWithoutStreamCompaction << <numTasks[2], 512, 0, cudaStreamTailLaunch >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
                 else if (numTask1 < 64 * 16 * 16)
-                    quickSortWithoutStreamCompaction << <numTasks[2], 256, 0, cudaStreamTailLaunch >> > (data, left, right, numTasks, tasks, tasks2, tasks3, tasks4, leftLeft, rightRight, idData, idLeftLeft, idLeft, idRight, idRightRight, idPivotLeft, idPivot, idPivotRight);
-                else if (numTask1 < 64 * 16 * 16 * 16)
-                    quickSortWithoutStreamCompaction << <numTasks[2], 128, 0, cudaStreamTailLaunch >> > (data, left, right, numTasks, tasks, tasks2, tasks3, tasks4, leftLeft, rightRight, idData, idLeftLeft, idLeft, idRight, idRightRight, idPivotLeft, idPivot, idPivotRight);
+                    quickSortWithoutStreamCompaction << <numTasks[2], 256, 0, cudaStreamTailLaunch >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
                 else
-                    quickSortWithoutStreamCompaction << <numTasks[2], 64, 0, cudaStreamTailLaunch >> > (data, left, right, numTasks, tasks, tasks2, tasks3, tasks4, leftLeft, rightRight, idData, idLeftLeft, idLeft, idRight, idRightRight, idPivotLeft, idPivot, idPivotRight);
+                    quickSortWithoutStreamCompaction << <numTasks[2], DIRECTLY_COMPUTE_LIMIT, 0, cudaStreamTailLaunch >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+              
 
             }
 
@@ -80,12 +74,10 @@ namespace QuickIndex
 
 
     template<typename Type>
-    __global__ void copyTasksBack(Type* __restrict__ data, Type* __restrict__ left, Type* __restrict__ right, int* __restrict__ numTasks,
+    __global__ void copyTasksBack(Type* __restrict__ data, int* __restrict__ numTasks,
         int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-        Type* __restrict__ leftLeft, Type* __restrict__ rightRight,
-        int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-        int* __restrict__ idRight, int* __restrict__ idRightRight,
-        int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight)
+        int* __restrict__ idData,
+        Type* __restrict__ arrTmp, int* __restrict__ idArrTmp)
     {
         const int id = threadIdx.x;
         const int n = numTasks[0];
@@ -121,9 +113,7 @@ namespace QuickIndex
         {
 
             resetNumTasks << <1, 1, 0, cudaStreamTailLaunch >> > (
-                data, left, right, numTasks, tasks, tasks2, tasks3, tasks4,
-                leftLeft, rightRight, idData, idLeftLeft, idLeft,
-                idRight, idRightRight, idPivotLeft, idPivot, idPivotRight);
+                data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
         }
 
     }
@@ -134,12 +124,10 @@ namespace QuickIndex
 #define compSw(a,x,y,b) if(a[y]<a[x]){ auto t = a[x];a[x]=a[y];a[y]=t; auto u = b[x];b[x]=b[y];b[y]=u;}
 
     template<typename Type>
-    __global__ void bruteSort(Type* __restrict__ arr, Type* __restrict__ left, Type* __restrict__ right, int* __restrict__ numTasks,
+    __global__ void bruteSort(Type* __restrict__ arr, int* __restrict__ numTasks,
         int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-        Type* __restrict__ leftLeft, Type* __restrict__ rightRight,
-        int* __restrict__ idArr, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-        int* __restrict__ idRight, int* __restrict__ idRightRight,
-        int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight)
+        int* __restrict__ idArr,
+        Type* __restrict__ arrTmp, int* __restrict__ idArrTmp)
     {
 
         const int id = threadIdx.x;
@@ -209,12 +197,10 @@ namespace QuickIndex
     //              block 0     block 1     block 2     block 3     ---> cuda blocks
     template<typename Type>
     __global__ void quickSortWithoutStreamCompaction(
-        Type* __restrict__ arr, Type* __restrict__ left, Type* __restrict__ right, int* __restrict__ numTasks,
+        Type* __restrict__ arr, int* __restrict__ numTasks,
         int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-        Type* __restrict__ leftLeft, Type* __restrict__ rightRight,
-        int* __restrict__ idArr, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-        int* __restrict__ idRight, int* __restrict__ idRightRight,
-        int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight)
+        int* __restrict__ idArr,
+        Type* __restrict__ arrTmp, int*__restrict__ idArrTmp)
     {
         // 1 block = 1 chunk of data
         const int gid = blockIdx.x;
@@ -222,7 +208,7 @@ namespace QuickIndex
         const int bd = blockDim.x;
 
         if (id == 0 && gid == 0)
-            copyTasksBack << <1, 1024, 0, cudaStreamTailLaunch >> > (arr, left, right, numTasks, tasks, tasks2, tasks3, tasks4, leftLeft, rightRight, idArr, idLeftLeft, idLeft, idRight, idRightRight, idPivotLeft, idPivot, idPivotRight);
+            copyTasksBack << <1, 1024, 0, cudaStreamTailLaunch >> > (arr, numTasks, tasks, tasks2, tasks3, tasks4, idArr, arrTmp, idArrTmp);
 
 
         __shared__ int taskIdCacheStart;
@@ -247,24 +233,33 @@ namespace QuickIndex
             return;
         }
 
-        if (num == 2)
-        {
-            if (id == 0)
-            {
-                compSw(arr, startIncluded, startIncluded + 1, idArr);
-            }
-
+        if (num < 2)
             return;
-        }
-        else if (num == 3)
-        {
-            if (id == 0)
-            {
-                compSw(arr, startIncluded, startIncluded + 1, idArr);
-                compSw(arr, startIncluded, startIncluded + 2, idArr);
-                compSw(arr, startIncluded + 1, startIncluded + 2, idArr);
-            }
 
+
+        if (num >= 2 && num <= DIRECTLY_COMPUTE_LIMIT && bd>= DIRECTLY_COMPUTE_LIMIT)
+        {
+
+            // warp-level odd-even parallel sort
+            for (int i = 0; i < num; i++)
+            {
+                if (id + 1 < num)
+                {
+                    if ((id % 2 == 0))
+                    {
+                        compSw(arr, startIncluded+id, startIncluded+id + 1, idArr);
+                    }
+                }
+                __syncthreads();
+                if (id + 1 < num)
+                {
+                    if ((id % 2 == 1))
+                    {
+                        compSw(arr, startIncluded+id, startIncluded+id + 1, idArr);
+                    }
+                }
+                __syncthreads();
+            }
             return;
         }
 
@@ -316,6 +311,9 @@ namespace QuickIndex
         }
         __syncthreads();
 
+        // two-pass
+        // 1: counting to find borders of chunks
+        // 2: moving to a temporary array & copying back to original        
         const int stepsArray = (num / bd) + 1;
         for (int i = 0; i < stepsArray; i++)
         {
@@ -326,44 +324,33 @@ namespace QuickIndex
                 const int dataId = idArr[curId + startIncluded];
                 if (data == pivotLeft)
                 {
-                    auto idx = atomicAdd(&indexPivotLeft, 1);
-                    idPivotLeft[startIncluded + idx] = dataId;
+                    atomicAdd(&indexPivotLeft, 1);
                 }
                 else if (data == pivot)
                 {
-                    auto idx = atomicAdd(&indexPivot, 1);
-                    idPivot[startIncluded + idx] = dataId;
+                    atomicAdd(&indexPivot, 1);
                 }
                 else if (data == pivotRight)
                 {
-                    auto idx = atomicAdd(&indexPivotRight, 1);
-                    idPivotRight[startIncluded + idx] = dataId;
+                    atomicAdd(&indexPivotRight, 1);
                 }
                 else
                 {
                     if (data < pivotLeft)
                     {
-                        auto idx = startIncluded + atomicAdd(&indexLeftLeft, 1);
-                        leftLeft[idx] = data;
-                        idLeftLeft[idx] = dataId;
+                        atomicAdd(&indexLeftLeft, 1);
                     }
                     else if (data < pivot)
                     {
-                        auto idx = startIncluded + atomicAdd(&indexLeft, 1);
-                        left[idx] = data;
-                        idLeft[idx] = dataId;
+                        atomicAdd(&indexLeft, 1);
                     }
                     else if (data < pivotRight)
                     {
-                        auto idx = startIncluded + atomicAdd(&indexRight, 1);
-                        right[idx] = data;
-                        idRight[idx] = dataId;
+                        atomicAdd(&indexRight, 1);
                     }
                     else if (data > pivotRight)
                     {
-                        auto idx = startIncluded + atomicAdd(&indexRightRight, 1);
-                        rightRight[idx] = data;
-                        idRightRight[idx] = dataId;
+                        atomicAdd(&indexRightRight, 1);
                     }
                 }
 
@@ -379,96 +366,95 @@ namespace QuickIndex
         nRight = indexRight;
         nPivotRight = indexPivotRight;
         nRightRight = indexRightRight;
-
-
-        // move leftleft
-        const int stepsLeftLeft = (nLeftLeft / bd) + 1;
-        for (int i = 0; i < stepsLeftLeft; i++)
+        const int offsetLeftLeft = startIncluded;
+        const int offsetPivotLeft = offsetLeftLeft+indexLeftLeft;
+        const int offsetLeft = offsetPivotLeft + indexPivotLeft;
+        const int offsetPivot = offsetLeft + indexLeft;
+        const int offsetRight = offsetPivot + indexPivot;
+        const int offsetPivotRight = offsetRight + indexRight;
+        const int offsetRightRight = offsetPivotRight + indexPivotRight;
+        __syncthreads();
+        if (id == 0)
+        {
+            indexLeftLeft=0;
+            indexPivotLeft = 0;
+            indexLeft = 0;
+            indexPivot = 0;
+            indexRight = 0;
+            indexPivotRight = 0;
+            indexRightRight = 0;
+        }
+        __syncthreads();
+        for (int i = 0; i < stepsArray; i++)
         {
             const int curId = i * bd + id;
-            if (curId < nLeftLeft)
+            if (curId < num)
             {
-                arr[curId + startIncluded] = leftLeft[startIncluded + curId];
-                idArr[curId + startIncluded] = idLeftLeft[startIncluded + curId];
+                const Type data = arr[curId + startIncluded];
+                const int dataId = idArr[curId + startIncluded];
+                if (data == pivotLeft)
+                {
+                    auto idx = atomicAdd(&indexPivotLeft, 1);
+                    idArrTmp[offsetPivotLeft+idx] = dataId;
+                    arrTmp[offsetPivotLeft + idx] = data;
+                }
+                else if (data == pivot)
+                {
+                    auto idx = atomicAdd(&indexPivot, 1);
+                    idArrTmp[offsetPivot + idx] = dataId;
+                    arrTmp[offsetPivot + idx] = data;
+                }
+                else if (data == pivotRight)
+                {
+                    auto idx = atomicAdd(&indexPivotRight, 1);
+                    idArrTmp[offsetPivotRight + idx] = dataId;
+                    arrTmp[offsetPivotRight + idx] = data;
+                }
+                else
+                {
+                    if (data < pivotLeft)
+                    {
+                        auto idx = atomicAdd(&indexLeftLeft, 1);
+                        idArrTmp[offsetLeftLeft + idx] = dataId;
+                        arrTmp[offsetLeftLeft + idx] = data;
+                    }
+                    else if (data < pivot)
+                    {
+                        auto idx = atomicAdd(&indexLeft, 1);
+                        idArrTmp[offsetLeft + idx] = dataId;
+                        arrTmp[offsetLeft + idx] = data;
+                    }
+                    else if (data < pivotRight)
+                    {
+                        auto idx = atomicAdd(&indexRight, 1);
+                        idArrTmp[offsetRight + idx] = dataId;
+                        arrTmp[offsetRight + idx] = data;
+                    }
+                    else if (data > pivotRight)
+                    {
+                        auto idx = atomicAdd(&indexRightRight, 1);
+                        idArrTmp[offsetRightRight + idx] = dataId;
+                        arrTmp[offsetRightRight + idx] = data;
+                    }
+                }
+
             }
         }
 
-        // move pivotleft
-        const int stepsPivotLeft = (nPivotLeft / bd) + 1;
-        for (int i = 0; i < stepsPivotLeft; i++)
-        {
-            const int curId = i * bd + id;
-            if (curId < nPivotLeft)
-            {
-                arr[curId + startIncluded + nLeftLeft] = pivotLeft;
-                idArr[curId + startIncluded + nLeftLeft] = idPivotLeft[curId + startIncluded];
-            }
-        }
-
-        // move left
-        const int stepsLeft = (nLeft / bd) + 1;
-        for (int i = 0; i < stepsLeft; i++)
-        {
-            const int curId = i * bd + id;
-            if (curId < nLeft)
-            {
-                arr[curId + startIncluded + nLeftLeft + nPivotLeft] = left[startIncluded + curId];
-                idArr[curId + startIncluded + nLeftLeft + nPivotLeft] = idLeft[startIncluded + curId];
-            }
-        }
-
-
-        // move mid (pivot)
-        const int stepsMid = (nPivot / bd) + 1;
-        for (int i = 0; i < stepsMid; i++)
-        {
-            const int curId = i * bd + id;
-            if (curId < nPivot)
-            {
-                arr[curId + startIncluded + nLeftLeft + nPivotLeft + nLeft] = pivot;
-                idArr[curId + startIncluded + nLeftLeft + nPivotLeft + nLeft] = idPivot[startIncluded + curId];
-            }
-        }
-
-
-
-        // move right
-        const int stepsRight = (nRight / bd) + 1;
-        for (int i = 0; i < stepsRight; i++)
-        {
-            const int curId = i * bd + id;
-            if (curId < nRight)
-            {
-                arr[curId + startIncluded + nLeftLeft + nPivotLeft + nLeft + nPivot] = right[startIncluded + curId];
-                idArr[curId + startIncluded + nLeftLeft + nPivotLeft + nLeft + nPivot] = idRight[startIncluded + curId];
-            }
-        }
-
-        // move pivot right
-        const int stepsPivotRight = (nPivotRight / bd) + 1;
-        for (int i = 0; i < stepsPivotRight; i++)
-        {
-            const int curId = i * bd + id;
-            if (curId < nPivotRight)
-            {
-                arr[curId + startIncluded + nLeftLeft + nPivotLeft + nLeft + nPivot + nRight] = pivotRight;
-                idArr[curId + startIncluded + nLeftLeft + nPivotLeft + nLeft + nPivot + nRight] = idPivotRight[startIncluded + curId];
-            }
-        }
-
-        // move right right
-        const int stepsRightRight = (nRightRight / bd) + 1;
-        for (int i = 0; i < stepsRightRight; i++)
-        {
-            const int curId = i * bd + id;
-            if (curId < nRightRight)
-            {
-                arr[curId + startIncluded + nLeftLeft + nPivotLeft + nLeft + nPivot + nRight + nPivotRight] = rightRight[startIncluded + curId];
-                idArr[curId + startIncluded + nLeftLeft + nPivotLeft + nLeft + nPivot + nRight + nPivotRight] = idRightRight[startIncluded + curId];
-            }
-        }
 
         __syncthreads();
+        // copying from temporary to real data
+        for (int i = 0; i < stepsArray; i++)
+        {
+            const int curId = i * bd + id;
+            if (curId < num)
+            {
+                arr[startIncluded + curId] = arrTmp[startIncluded + curId];
+                idArr[startIncluded + curId] = idArrTmp[startIncluded + curId];
+            }
+        }
+        __syncthreads();
+
 
 
 
@@ -480,7 +466,7 @@ namespace QuickIndex
             if (nLeftLeft > 1)
             {
 
-                if (nLeftLeft <= BRUTE_FORCE_LIMIT && nLeftLeft > 3) // push new "brute-force" task
+                if (nLeftLeft <= BRUTE_FORCE_LIMIT && nLeftLeft > DIRECTLY_COMPUTE_LIMIT) // push new "brute-force" task
                 {
                     const int index = atomicAdd(&numTasks[1], 1);
                     tasks4[index * 2] = startIncluded;
@@ -497,7 +483,7 @@ namespace QuickIndex
             if (nLeft > 1)
             {
 
-                if (nLeft <= BRUTE_FORCE_LIMIT && nLeft > 3) // push new "brute-force" task
+                if (nLeft <= BRUTE_FORCE_LIMIT && nLeft > DIRECTLY_COMPUTE_LIMIT) // push new "brute-force" task
                 {
                     const int index = atomicAdd(&numTasks[1], 1);
                     tasks4[index * 2] = startIncluded + nLeftLeft + nPivotLeft;
@@ -513,7 +499,7 @@ namespace QuickIndex
 
             if (nRight > 1)
             {
-                if (nRight <= BRUTE_FORCE_LIMIT && nRight > 3) // push new "brute-force" task
+                if (nRight <= BRUTE_FORCE_LIMIT && nRight > DIRECTLY_COMPUTE_LIMIT) // push new "brute-force" task
                 {
 
                     const int index = atomicAdd(&numTasks[1], 1);
@@ -531,7 +517,7 @@ namespace QuickIndex
 
             if (nRightRight > 1)
             {
-                if (nRightRight <= BRUTE_FORCE_LIMIT && nRightRight > 3) // push new "brute-force" task
+                if (nRightRight <= BRUTE_FORCE_LIMIT && nRightRight > DIRECTLY_COMPUTE_LIMIT) // push new "brute-force" task
                 {
 
                     const int index = atomicAdd(&numTasks[1], 1);
@@ -565,12 +551,10 @@ namespace QuickIndex
     template<typename Type>
     __global__ void quickSortMain(
         int n,
-        Type* __restrict__ data, Type* __restrict__ left, Type* __restrict__ right, int* __restrict__ numTasks,
-        int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-        Type* __restrict__ leftLeft, Type* __restrict__ rightRight,
-        int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-        int* __restrict__ idRight, int* __restrict__ idRightRight,
-        int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight)
+        Type* __restrict__ data, int* __restrict__ numTasks,
+        int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,      
+        int* __restrict__ idData,
+        Type* __restrict__ arrTmp, int* __restrict__ idArrTmp)
     {
 
         cudaStream_t stream0;
@@ -585,39 +569,31 @@ namespace QuickIndex
 
     // int data
     template
-        __global__ void copyTasksBack(int* __restrict__ data, int* __restrict__ left, int* __restrict__ right, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(int* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-            int* __restrict__ leftLeft, int* __restrict__ rightRight,
-            int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-            int* __restrict__ idRight, int* __restrict__ idRightRight,
-            int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight);
+            int* __restrict__ idData,
+            int* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     // short data
     template
-        __global__ void copyTasksBack(short* __restrict__ data, short* __restrict__ left, short* __restrict__ right, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(short* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-            short* __restrict__ leftLeft, short* __restrict__ rightRight,
-            int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-            int* __restrict__ idRight, int* __restrict__ idRightRight,
-            int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight);
+            int* __restrict__ idData,
+            short* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     // char data
     template
-        __global__ void copyTasksBack(char* __restrict__ data, char* __restrict__ left, char* __restrict__ right, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(char* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-            char* __restrict__ leftLeft, char* __restrict__ rightRight,
-            int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-            int* __restrict__ idRight, int* __restrict__ idRightRight,
-            int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight);
+            int* __restrict__ idData,
+            char* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     // long data
     template
-        __global__ void copyTasksBack(long* __restrict__ data, long* __restrict__ left, long* __restrict__ right, int* __restrict__ numTasks,
-            int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-            long* __restrict__ leftLeft, long* __restrict__ rightRight,
-            int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-            int* __restrict__ idRight, int* __restrict__ idRightRight,
-            int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight);
+        __global__ void copyTasksBack(long* __restrict__ data, int* __restrict__ numTasks,
+            int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,            
+            int* __restrict__ idData,
+            long* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
 
 
@@ -630,59 +606,47 @@ namespace QuickIndex
 
     // unsigned int
     template
-        __global__ void copyTasksBack(unsigned int* __restrict__ data, unsigned int* __restrict__ left, unsigned int* __restrict__ right, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(unsigned int* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-            unsigned int* __restrict__ leftLeft, unsigned int* __restrict__ rightRight,
-            int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-            int* __restrict__ idRight, int* __restrict__ idRightRight,
-            int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight);
+            int* __restrict__ idData,
+            unsigned int* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     // unsigned short data
     template
-        __global__ void copyTasksBack(unsigned short* __restrict__ data, unsigned short* __restrict__ left, unsigned short* __restrict__ right, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(unsigned short* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-            unsigned short* __restrict__ leftLeft, unsigned short* __restrict__ rightRight,
-            int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-            int* __restrict__ idRight, int* __restrict__ idRightRight,
-            int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight);
+            int* __restrict__ idData,
+            unsigned short* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     // unsigned char data
     template
-        __global__ void copyTasksBack(unsigned char* __restrict__ data, unsigned char* __restrict__ left, unsigned  char* __restrict__ right, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(unsigned char* __restrict__ data,int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-            unsigned char* __restrict__ leftLeft, unsigned  char* __restrict__ rightRight,
-            int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-            int* __restrict__ idRight, int* __restrict__ idRightRight,
-            int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight);
+            int* __restrict__ idData,
+            unsigned char* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     // unsigned long data
     template
-        __global__ void copyTasksBack(unsigned long* __restrict__ data, unsigned long* __restrict__ left, unsigned long* __restrict__ right, int* __restrict__ numTasks,
-            int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-            unsigned long* __restrict__ leftLeft, unsigned long* __restrict__ rightRight,
-            int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-            int* __restrict__ idRight, int* __restrict__ idRightRight,
-            int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight);
+        __global__ void copyTasksBack(unsigned long* __restrict__ data, int* __restrict__ numTasks,
+            int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,            
+            int* __restrict__ idData,
+            unsigned long* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
 
 
     // float data
     template
-        __global__ void copyTasksBack(float* __restrict__ data, float* __restrict__ left, float* __restrict__ right, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(float* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-            float* __restrict__ leftLeft, float* __restrict__ rightRight,
-            int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-            int* __restrict__ idRight, int* __restrict__ idRightRight,
-            int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight);
+            int* __restrict__ idData,
+            float* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
     // double data
     template
-        __global__ void copyTasksBack(double* __restrict__ data, double* __restrict__ left, double* __restrict__ right, int* __restrict__ numTasks,
+        __global__ void copyTasksBack(double* __restrict__ data, int* __restrict__ numTasks,
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-            double* __restrict__ leftLeft, double* __restrict__ rightRight,
-            int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-            int* __restrict__ idRight, int* __restrict__ idRightRight,
-            int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight);
+            int* __restrict__ idData,
+            double* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
 
 

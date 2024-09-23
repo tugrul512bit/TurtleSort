@@ -6,7 +6,7 @@
 int main()
 {
     using Type = int;
-    constexpr int n = 1024*1024;
+    constexpr int n = 1024*64;
 
 
     // only sorts values (faster)
@@ -49,9 +49,10 @@ int main()
 
         size_t t1, t2, t3;
         {
+            QuickIndex::Bench bench(&t1);           
             sort.StartSorting(&hostData,&hostIndex);
-            double t = sort.Sync();            
-            std::cout << "gpu-sort elapsed time = " << t << std::endl;
+            double t = sort.Sync();
+
         }
 
         {
@@ -78,7 +79,7 @@ int main()
             QuickIndex::Bench bench(&t3);
             std::sort(backup2.begin(), backup2.end(), [](auto& e1, auto& e2) { return e1.data < e2.data; });
         }
-        std::cout << "std::qsort:" << t2 / 1000000000.0 << "   std::sort:" << t3 / 1000000000.0 << std::endl;
+        std::cout<<"gpu: "<<t1/1000000000.0 << "   std::qsort:" << t2 / 1000000000.0 << "   std::sort:" << t3 / 1000000000.0 << std::endl;
         bool err = false, err2=false;
         for (int i = 0; i < n - 2; i++)
             if (hostData[i] > hostData[i + 1])
@@ -89,15 +90,16 @@ int main()
                 break;
             }
 
-        for (int i = 0; i < n; i++)
+        for (int i = 0; i < n ; i++)
         {
             if (hostData[i] != hostIndex[i])
             {
-                std::cout << "error: index tracking failed!!! at: "<<i<<": "<<hostIndex[i]<< std::endl;
                 err2 = true;
+                j = 1000000;
+                std::cout << "error: index calculation wrong" << std::endl;
+                break;
             }
         }
-
         if (!err && !err2)
         {
             std::cout << "quicksort (" << n << " elements) completed successfully " << std::endl;

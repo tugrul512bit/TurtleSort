@@ -25,12 +25,9 @@ namespace QuickIndex
 	__global__ void resetTasks(int* tasks, int* tasks2, int* tasks3, int* tasks4, const int n);
 
 	template<typename Type>
-	__global__ void copyTasksBack(Type* __restrict__ data, Type* __restrict__ left, Type* __restrict__ right, int* __restrict__ numTasks,
+	__global__ void copyTasksBack(Type* __restrict__ data,int* __restrict__ numTasks,
 		int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
-		Type* __restrict__ leftLeft, Type* __restrict__ rightRight,
-		int* __restrict__ idData, int* __restrict__ idLeftLeft, int* __restrict__ idLeft,
-		int* __restrict__ idRight, int* __restrict__ idRightRight,
-		int* __restrict__ idPivotLeft, int* __restrict__ idPivot, int* __restrict__ idPivotRight);
+		int* __restrict__ idData,Type*__restrict__ arrTmp,int*__restrict__ idArrTmp);
 
 
 
@@ -43,10 +40,6 @@ namespace QuickIndex
 	{
 
 		Type* data;
-		Type* leftLeft;
-		Type* left;
-		Type* right;
-		Type* rightRight;
 		int* tasks;
 		int* tasks2;
 		int* tasks3;
@@ -55,30 +48,24 @@ namespace QuickIndex
 		int maxN;
 
 		int* idData;
-		int* idLeftLeft;
-		int* idLeft;
-		int* idRight;
-		int* idRightRight;
-		int* idPivotLeft;
-		int* idPivot;
-		int* idPivotRight;
 
+		Type* dataTmp;
+		int* idDataTmp;
 
 
 		std::vector<Type>* toSort;
 		std::vector<int>* idTracker;
 		std::chrono::nanoseconds t1, t2;
+		cudaStream_t stream0;
 		FastestQuicksort(int maxElements)
 		{
 			maxN = maxElements;
 
 			gpuErrchk(cudaSetDevice(0));
 			gpuErrchk(cudaDeviceSynchronize());
+			gpuErrchk(cudaStreamCreateWithFlags(&stream0,cudaStreamNonBlocking));
 			gpuErrchk(cudaMalloc(&data, maxN * sizeof(Type)));
-			gpuErrchk(cudaMalloc(&left, maxN * sizeof(Type)));
-			gpuErrchk(cudaMalloc(&leftLeft, maxN * sizeof(Type)));
-			gpuErrchk(cudaMalloc(&right, maxN * sizeof(Type)));
-			gpuErrchk(cudaMalloc(&rightRight, maxN * sizeof(Type)));
+			gpuErrchk(cudaMalloc(&dataTmp, maxN * sizeof(Type)));
 			gpuErrchk(cudaMalloc(&numTasks, 4 * sizeof(int)));
 			gpuErrchk(cudaMalloc(&tasks, maxN * sizeof(int)));
 			gpuErrchk(cudaMalloc(&tasks2, maxN * sizeof(int)));
@@ -86,18 +73,12 @@ namespace QuickIndex
 			gpuErrchk(cudaMalloc(&tasks4, maxN * sizeof(int)));
 
 			gpuErrchk(cudaMalloc(&idData, maxN * sizeof(int)));
-			gpuErrchk(cudaMalloc(&idLeftLeft, maxN * sizeof(int)));
-			gpuErrchk(cudaMalloc(&idLeft, maxN * sizeof(int)));
-			gpuErrchk(cudaMalloc(&idRight, maxN * sizeof(int)));
-			gpuErrchk(cudaMalloc(&idRightRight, maxN * sizeof(int)));
-			gpuErrchk(cudaMalloc(&idPivotLeft, maxN * sizeof(int)));
-			gpuErrchk(cudaMalloc(&idPivot, maxN * sizeof(int)));
-			gpuErrchk(cudaMalloc(&idPivotRight, maxN * sizeof(int)));
+			gpuErrchk(cudaMalloc(&idDataTmp, maxN * sizeof(int)));
 
 
 
 
-			resetTasks << <1 + maxN / 1024, 1024 >> > (tasks, tasks2, tasks3, tasks4, maxN);
+			resetTasks << <1 + maxN / 1024, 1024,0,stream0 >> > (tasks, tasks2, tasks3, tasks4, maxN);
 			gpuErrchk(cudaGetLastError());
 			gpuErrchk(cudaDeviceSynchronize());
 		}
@@ -121,10 +102,8 @@ namespace QuickIndex
 
 			gpuErrchk(cudaMemcpy((void*)idData, indicesToTrack->data(), indicesToTrack->size() * sizeof(int), cudaMemcpyHostToDevice));
 
-			copyTasksBack << <1, 1024 >> > (
-				data, left, right, numTasks, tasks, tasks2, tasks3, tasks4,
-				leftLeft, rightRight, idData, idLeftLeft, idLeft, idRight,
-				idRightRight, idPivotLeft, idPivot, idPivotRight);
+			copyTasksBack << <1, 1024,0,stream0 >> > (
+				data, numTasks, tasks, tasks2, tasks3, tasks4,idData, dataTmp, idDataTmp);
 
 		}
 
@@ -132,7 +111,8 @@ namespace QuickIndex
 		// returns elapsed time in seconds
 		double Sync()
 		{
-			gpuErrchk(cudaDeviceSynchronize());
+			gpuErrchk(cudaStreamSynchronize(stream0));
+			//gpuErrchk(cudaDeviceSynchronize());
 			gpuErrchk(cudaMemcpy(toSort->data(), (void*)data, toSort->size() * sizeof(Type), cudaMemcpyDeviceToHost));
 			gpuErrchk(cudaMemcpy(idTracker->data(), (void*)idData, idTracker->size() * sizeof(int), cudaMemcpyDeviceToHost));
 			t2 = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
@@ -143,10 +123,7 @@ namespace QuickIndex
 		~FastestQuicksort()
 		{
 			gpuErrchk(cudaFree(data));
-			gpuErrchk(cudaFree(left));
-			gpuErrchk(cudaFree(right));
-			gpuErrchk(cudaFree(leftLeft));
-			gpuErrchk(cudaFree(rightRight));
+			gpuErrchk(cudaFree(dataTmp));
 			gpuErrchk(cudaFree(tasks));
 			gpuErrchk(cudaFree(tasks2));
 			gpuErrchk(cudaFree(tasks3));
@@ -154,14 +131,9 @@ namespace QuickIndex
 			gpuErrchk(cudaFree(numTasks));
 
 			gpuErrchk(cudaFree(idData));
-			gpuErrchk(cudaFree(idLeftLeft));
-			gpuErrchk(cudaFree(idLeft));
-			gpuErrchk(cudaFree(idRight));
-			gpuErrchk(cudaFree(idRightRight));
-			gpuErrchk(cudaFree(idPivotLeft));
-			gpuErrchk(cudaFree(idPivot));
-			gpuErrchk(cudaFree(idPivotRight));
+			gpuErrchk(cudaFree(idDataTmp));
 
+			gpuErrchk(cudaStreamDestroy(stream0));
 		}
 	};
 
