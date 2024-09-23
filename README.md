@@ -11,7 +11,9 @@ This is only fastest compared to CPU-based quicksort versions and runs asynchron
 
 # Performance
 - 10x faster than std::qsort for 64M random elements (loses some performance with index-tracking)
-- 5x faster than std::sort for 64M random elements 
+- 5x faster than std::sort for 64M random elements
+- 9x faster than std::sort for 1M random * random + random elements
+- 2x faster than std::sort for 4M elements of 0,1,2,...99 repeated (data[i]=i%100)
 
 Test system: RTX4070, Ryzen7900, DDR5-6000 dual-channel RAM.
 
