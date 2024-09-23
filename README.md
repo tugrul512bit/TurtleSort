@@ -1,32 +1,33 @@
 # Fastest Quicksort
 
-This is only fastest compared to CPU-based quicksort versions and runs asynchronously to CPU so the host-side can do work while sorting is made.
+Quicksort algorithm boosted with optional paths for different sized data chunks with different sorting algorithms while keeping the "quick" part as main coordinator. Uses CUDA for accelerating parallel algorithms such as reductions, counting and others.
+
 
 # Features:
 
 - Uses 3 pivots instead of 1. Each pivot has counting-sort type of optimization and filters all duplicates of pivots for a good speedup. Duplicated elements in array make the sorting faster. Pivots are chosen from start, middle and stop indices.
 - CUDA acceleration with dynamic parallelism enables asynchronous computation to CPU. CPU can do more work at the same time with full bandwidth of RAM.
+- CUDA compression improves performance for redundancy in data.(work in progress)
 - Supports different data types such as int, unsigned char, long, short, etc
 - Already-sorted arrays are 2x slow compared to random-initialized arrays. Being only 2x slower for 64M suggests that either the constant factor in worst-case O(n^2 x c) is very good or it is not O(n^2) anymore due to said optimizations.
 
 # Performance
-- 10x faster than std::qsort for 64M random elements (loses some performance with index-tracking)
-- 5x faster than std::sort for 64M random elements
-- 9x faster than std::sort for 1M random * random + random elements
-- 2x faster than std::sort for 4M elements of 0,1,2,...99 repeated (data[i]=i%100)
+- 16x faster than std::qsort, 8x faster than std::sort for 64M random elements (better when not tracking index)
+
 
 Test system: RTX4070, Ryzen7900, DDR5-6000 dual-channel RAM.
 
 
 # Requirements
 
-- GPU: Nvidia with dynamic-parallelism + CUDA 12 support. 
+- GPU: Nvidia with dynamic-parallelism + CUDA 12 support.
 - Video-memory: 2GB per 32M elements for index-tracked version
 - RAM: only value vector and index vector are used as i/o.
 
 Compiler options: 
 
 - generate relocatable device code (-rdc=true)
+- C++ compiler's linkage for cuda.lib (this uses CUDA driver api to enable features such as compressible memory)
 - compute_89, sm_89 for latest RTX cards
 - -lineinfo for debugging
 - host: /Ox highest optimization level
