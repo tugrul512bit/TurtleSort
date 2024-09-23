@@ -20,7 +20,8 @@ Test system: RTX4070, Ryzen7900, DDR5-6000 dual-channel RAM.
 
 # Requirements
 
-- GPU: Nvidia with dynamic-parallelism + CUDA 12 support. 
+- GPU: Nvidia with dynamic-parallelism + CUDA 12 support.
+- Compiler's linkage for cuda.lib (this uses CUDA driver api to enable features such as compressible memory)
 - Video-memory: 2GB per 32M elements for index-tracked version
 - RAM: only value vector and index vector are used as i/o.
 
