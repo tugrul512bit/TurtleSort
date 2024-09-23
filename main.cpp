@@ -6,7 +6,7 @@
 int main()
 {
     using Type = int;
-    constexpr int n = 1024*1024;
+    constexpr int n = 1024 * 1024;
 
 
     // only sorts values (faster)
@@ -39,7 +39,7 @@ int main()
         std::cout << "-------------------------" << std::endl;
         for (int i = 0; i < n; i++)
         {
-            hostData[i] = rand()*rand()+rand();
+            hostData[i] = rand();
             hostIndex[i] = hostData[i];
             backup[i].data = hostData[i];
             backup2[i].data = hostData[i];
@@ -49,8 +49,8 @@ int main()
 
         size_t t1, t2, t3;
         {
-            QuickIndex::Bench bench(&t1);           
-            sort.StartSorting(&hostData,&hostIndex);
+            QuickIndex::Bench bench(&t1);
+            sort.StartSorting(&hostData, &hostIndex);
             double t = sort.Sync();
 
         }
@@ -79,8 +79,8 @@ int main()
             QuickIndex::Bench bench(&t3);
             std::sort(backup2.begin(), backup2.end(), [](auto& e1, auto& e2) { return e1.data < e2.data; });
         }
-        std::cout<<"gpu: "<<t1/1000000000.0 << "   std::qsort:" << t2 / 1000000000.0 << "   std::sort:" << t3 / 1000000000.0 << std::endl;
-        bool err = false, err2=false;
+        std::cout << "gpu: " << t1 / 1000000000.0 << "   std::qsort:" << t2 / 1000000000.0 << "   std::sort:" << t3 / 1000000000.0 << std::endl;
+        bool err = false, err2 = false;
         for (int i = 0; i < n - 2; i++)
             if (hostData[i] > hostData[i + 1])
             {
@@ -90,7 +90,7 @@ int main()
                 break;
             }
 
-        for (int i = 0; i < n ; i++)
+        for (int i = 0; i < n; i++)
         {
             if (hostData[i] != hostIndex[i])
             {

@@ -4,10 +4,12 @@
 namespace QuickIndex
 {
     // maximum number of elements going into brute-force chunks
-    constexpr int BRUTE_FORCE_LIMIT = 128; 
+    constexpr int BRUTE_FORCE_LIMIT = 128;
 
     // maximum number of elements directly computed without any task mechanics
-    constexpr int DIRECTLY_COMPUTE_LIMIT = 16;
+    // minimum allowed: 32 due to some warp-level computations
+    // maximum allowed: BRUTE_FORCE_LIMIT - 1
+    constexpr int DIRECTLY_COMPUTE_LIMIT = 32;
 
 
     // task pattern: 
@@ -52,8 +54,8 @@ namespace QuickIndex
 
             if (numTasks[2] > 0)
             {
-                //quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, cudaStreamTailLaunch >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
-                
+                quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, cudaStreamTailLaunch >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                /*
                 if (numTask1 < 64)
                     quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, cudaStreamTailLaunch >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
                 else if (numTask1 < 64 * 16)
@@ -62,7 +64,7 @@ namespace QuickIndex
                     quickSortWithoutStreamCompaction << <numTasks[2], 256, 0, cudaStreamTailLaunch >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
                 else
                     quickSortWithoutStreamCompaction << <numTasks[2], DIRECTLY_COMPUTE_LIMIT, 0, cudaStreamTailLaunch >> > (data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
-              
+              */
 
             }
 
@@ -191,6 +193,91 @@ namespace QuickIndex
         }
     }
 
+
+    __device__ void reductionWithBlock2x(
+        int count, int * countCache,
+        int count2, int* countCache2,
+        const int id, const int bd,
+        int * output, int * output2)
+    {
+        
+        int wSum = count;
+        int wSum2 = count2;
+        for (unsigned int wOfs = 16; wOfs > 0; wOfs >>= 1)
+        {
+            wSum += __shfl_down_sync(0xffffffff, wSum, wOfs);
+            wSum2 += __shfl_down_sync(0xffffffff, wSum2, wOfs);
+        }
+        __syncthreads();
+        if (id % 32 == 0)
+        {
+            countCache[id / 32] = wSum;
+            countCache2[id / 32] = wSum2;
+        }
+        __syncthreads();
+        if (id < 32)
+        {
+            wSum = countCache[id];
+            wSum2 = countCache2[id];
+            for (unsigned int wOfs = 16; wOfs > 0; wOfs >>= 1)
+            {
+                wSum += __shfl_down_sync(0xffffffff, wSum, wOfs);
+                wSum2 += __shfl_down_sync(0xffffffff, wSum2, wOfs);
+            }
+        }
+        __syncthreads();
+        if (id == 0)
+        {
+            countCache[0] = wSum;
+            countCache2[0] = wSum2;
+        }
+        __syncthreads();
+        *output = countCache[0];
+        *output2 = countCache2[0];        
+        return;
+    }
+
+
+
+    __device__ void reductionWithBlock1x(
+        int count, int* countCache,
+        const int id, const int bd,
+        int* output)
+    {
+
+        int wSum = count;
+
+        for (unsigned int wOfs = 16; wOfs > 0; wOfs >>= 1)
+        {
+            wSum += __shfl_down_sync(0xffffffff, wSum, wOfs);
+        }
+        __syncthreads();
+        if (id % 32 == 0)
+        {
+            countCache[id / 32] = wSum;
+
+        }
+        __syncthreads();
+        if (id < 32)
+        {
+            wSum = countCache[id];
+
+            for (unsigned int wOfs = 16; wOfs > 0; wOfs >>= 1)
+            {
+                wSum += __shfl_down_sync(0xffffffff, wSum, wOfs);
+            }
+        }
+        __syncthreads();
+        if (id == 0)
+        {
+            countCache[0] = wSum;
+        }
+        __syncthreads();
+        *output = countCache[0];
+
+        return;
+    }
+
     // task pattern: 
     //              task 0      task 1      task 2      task 3      ---> array chunks to sort (no overlap)
     //              start stop  start stop  start stop  start stop  ---> tasks buffer
@@ -292,13 +379,7 @@ namespace QuickIndex
         const Type pivotRight = pivotLoad[2];
 
 
-        int nLeftLeft = 0;
-        int nPivotLeft = 0;
-        int nLeft = 0;
-        int nPivot = 0;
-        int nRight = 0;
-        int nPivotRight = 0;
-        int nRightRight = 0;
+
         if (id == 0)
         {
             indexLeftLeft = 0;
@@ -313,77 +394,91 @@ namespace QuickIndex
 
         // two-pass
         // 1: counting to find borders of chunks
-        // 2: moving to a temporary array & copying back to original        
+        // 2: moving to a temporary array & copying back to original                
+        int countPivotLeft=0;
+        int countPivot=0;
+        int countPivotRight=0;
+        int countLeftLeft=0;
+        int countLeft=0;
+        int countRight=0;
+        int countRightRight=0;
         const int stepsArray = (num / bd) + 1;
         for (int i = 0; i < stepsArray; i++)
         {
             const int curId = i * bd + id;
             if (curId < num)
             {
-                const Type data = arr[curId + startIncluded];
-                const int dataId = idArr[curId + startIncluded];
+                const Type data = arr[curId + startIncluded];                
                 if (data == pivotLeft)
                 {
-                    atomicAdd(&indexPivotLeft, 1);
+                    //atomicAdd(&indexPivotLeft, 1);
+                    countPivotLeft++;
                 }
                 else if (data == pivot)
                 {
-                    atomicAdd(&indexPivot, 1);
+                    //atomicAdd(&indexPivot, 1);
+                    countPivot++;
                 }
                 else if (data == pivotRight)
                 {
-                    atomicAdd(&indexPivotRight, 1);
+                    //atomicAdd(&indexPivotRight, 1);
+                    countPivotRight++;
                 }
                 else
                 {
                     if (data < pivotLeft)
                     {
-                        atomicAdd(&indexLeftLeft, 1);
+                        //atomicAdd(&indexLeftLeft, 1);
+                        countLeftLeft++;
                     }
                     else if (data < pivot)
                     {
-                        atomicAdd(&indexLeft, 1);
+                        //atomicAdd(&indexLeft, 1);
+                        countLeft++;
                     }
                     else if (data < pivotRight)
                     {
-                        atomicAdd(&indexRight, 1);
+                        //atomicAdd(&indexRight, 1);
+                        countRight++;
                     }
                     else if (data > pivotRight)
                     {
-                        atomicAdd(&indexRightRight, 1);
+                        //atomicAdd(&indexRightRight, 1);
+                        countRightRight++;
                     }
                 }
 
             }
         }
-
-
         __syncthreads();
-        nLeftLeft = indexLeftLeft;
-        nPivotLeft = indexPivotLeft;
-        nLeft = indexLeft;
-        nPivot = indexPivot;
-        nRight = indexRight;
-        nPivotRight = indexPivotRight;
-        nRightRight = indexRightRight;
+        __shared__ int countCache[32];
+        __shared__ int countCache2[32];
+
+        // sum of all counts (reducing number of atomicAdd calls)
+        int nLeftLeft = 0;
+        int nPivotLeft = 0;
+        int nLeft = 0;
+        int nPivot = 0;
+        int nRight = 0;
+        int nPivotRight = 0;
+        int nRightRight = 0;
+        reductionWithBlock2x(countLeftLeft, countCache, countPivotLeft, countCache2, id, bd, &nLeftLeft, &nPivotLeft);
+        reductionWithBlock2x(countLeft, countCache, countPivot, countCache2, id, bd, &nLeft, &nPivot);
+        reductionWithBlock2x(countRight, countCache, countPivotRight, countCache2, id, bd, &nRight, &nPivotRight);
+        reductionWithBlock1x(countRightRight, countCache, id, bd, &nRightRight);
+
+
+
+
+
         const int offsetLeftLeft = startIncluded;
-        const int offsetPivotLeft = offsetLeftLeft+indexLeftLeft;
-        const int offsetLeft = offsetPivotLeft + indexPivotLeft;
-        const int offsetPivot = offsetLeft + indexLeft;
-        const int offsetRight = offsetPivot + indexPivot;
-        const int offsetPivotRight = offsetRight + indexRight;
-        const int offsetRightRight = offsetPivotRight + indexPivotRight;
-        __syncthreads();
-        if (id == 0)
-        {
-            indexLeftLeft=0;
-            indexPivotLeft = 0;
-            indexLeft = 0;
-            indexPivot = 0;
-            indexRight = 0;
-            indexPivotRight = 0;
-            indexRightRight = 0;
-        }
+        const int offsetPivotLeft = offsetLeftLeft+nLeftLeft;
+        const int offsetLeft = offsetPivotLeft + nPivotLeft;
+        const int offsetPivot = offsetLeft + nLeft;
+        const int offsetRight = offsetPivot + nPivot;
+        const int offsetPivotRight = offsetRight + nRight;
+        const int offsetRightRight = offsetPivotRight + nPivotRight;
+
         __syncthreads();
         for (int i = 0; i < stepsArray; i++)
         {
@@ -392,6 +487,8 @@ namespace QuickIndex
             {
                 const Type data = arr[curId + startIncluded];
                 const int dataId = idArr[curId + startIncluded];
+                // todo: pivot values are known so they are "counting", no need to copy values anywhere
+                // but id values will be required
                 if (data == pivotLeft)
                 {
                     auto idx = atomicAdd(&indexPivotLeft, 1);
