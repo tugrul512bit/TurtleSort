@@ -5,7 +5,7 @@
 int main()
 {
     using Type = int;
-    constexpr int n = 1024*1024;
+    constexpr int n = 1024*1024*4;
 
 
     // n: number of elements supported for sorting
@@ -18,11 +18,11 @@ int main()
     for (auto& e : sample)
         std::cout << e << " ";
     std::cout << std::endl;
-    std::cout<<"Memory compression supported=" << sortVal.MemoryCompressionSupported() << std::endl;
+    std::cout<<"Memory compression successful=" << sortVal.MemoryCompressionSuccessful() << std::endl;
 
 
     // compression disabled by default
-    Quick::FastestQuicksort<Type> sort(n,true);
+    Quick::FastestQuicksort<Type> sort(n, compress);
     std::cout << "Check GPU boost frequency if performance drops." << std::endl;
 
     // sample
