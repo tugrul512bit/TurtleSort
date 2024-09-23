@@ -54,9 +54,12 @@ namespace Quick
 		int maxN;
 
 		int* idData;
+		bool idCompressed;
 
 		Type* dataTmp;
 		int* idDataTmp;
+		bool idTmpCompressed;
+		bool idTmpCompressFail;
 
 
 		std::vector<Type>* toSort;
@@ -101,23 +104,55 @@ namespace Quick
 					if (CUDA_SUCCESS != QuickHelper::allocateCompressible((void**)&data, maxN * sizeof(Type), true))
 					{
 						dataCompressed = false;
-						std::cout << "Compressible memory failed. Trying normal allocation" << std::endl;
-						gpuErrchk(cudaMalloc(&data, maxN * sizeof(Type)));
+						std::cout << "Compressible memory failed. Trying normal allocation" << std::endl;						
 					}
 					else
 						dataCompressed = true;
 					
+
+					if (TrackIndex)
+					{
+
+						if (CUDA_SUCCESS != QuickHelper::allocateCompressible((void**)&idData, maxN * sizeof(int), true))
+						{
+							idCompressed = false;
+							std::cout << "Compressible memory failed. Trying normal allocation" << std::endl;
+						}
+						else
+							idCompressed = true;
+
+						if (CUDA_SUCCESS != QuickHelper::allocateCompressible((void**)&idDataTmp, maxN * sizeof(int), true))
+						{
+							idTmpCompressed = false;
+							std::cout << "Compressible memory failed. Trying normal allocation" << std::endl;
+						}
+						else
+							idTmpCompressed = true;
+					}
+
 				}
 				else
+				{
 					dataCompressed = false;
+					idCompressed = false;
+					idTmpCompressed = false;
+				}
 				
 			}
 			else
 				dataCompressed = false;
 			
 			if (!dataCompressed)
-			{
 				gpuErrchk(cudaMalloc(&data, maxN * sizeof(Type)));
+			
+
+			if (TrackIndex)
+			{
+				if (!idCompressed)			
+					gpuErrchk(cudaMalloc(&idData, maxN * sizeof(int)));
+				
+				if (!idTmpCompressed)				
+					gpuErrchk(cudaMalloc(&idDataTmp, maxN * sizeof(int)));				
 			}
 
 			
@@ -137,11 +172,7 @@ namespace Quick
 			gpuErrchk(cudaMalloc(&tasks3, maxN * sizeof(int)));
 			gpuErrchk(cudaMalloc(&tasks4, maxN * sizeof(int)));
 
-			if (TrackIndex)
-			{
-				gpuErrchk(cudaMalloc(&idData, maxN * sizeof(int)));
-				gpuErrchk(cudaMalloc(&idDataTmp, maxN * sizeof(int)));
-			}
+
 
 
 
@@ -205,12 +236,16 @@ namespace Quick
 
 		~FastestQuicksort()
 		{
-			if(dataCompressed)
-			if (CUDA_SUCCESS != QuickHelper::freeCompressible((void *)data, maxN * sizeof(Type), true))
+			if (dataCompressed)
 			{
-				std::cout << "Compressible memory-free failed. Trying normal deallocation" << std::endl;
-				gpuErrchk(cudaFree(data));
+				if (CUDA_SUCCESS != QuickHelper::freeCompressible((void*)data, maxN * sizeof(Type), true))
+				{
+					std::cout << "Compressible memory-free failed. Trying normal deallocation" << std::endl;
+					gpuErrchk(cudaFree(data));
+				}
 			}
+			else
+				gpuErrchk(cudaFree(data));
 			
 			gpuErrchk(cudaFree(dataTmp));
 			gpuErrchk(cudaFree(tasks));
@@ -219,8 +254,31 @@ namespace Quick
 			gpuErrchk(cudaFree(tasks4));
 			gpuErrchk(cudaFree(numTasks));
 
-			gpuErrchk(cudaFree(idData));
-			gpuErrchk(cudaFree(idDataTmp));
+
+			if (idCompressed)
+			{
+				if (CUDA_SUCCESS != QuickHelper::freeCompressible((void*)idData, maxN * sizeof(int), true))
+				{
+					std::cout << "Compressible memory-free failed. Trying normal deallocation" << std::endl;
+					gpuErrchk(cudaFree(idData));
+				}
+			}
+			else
+				gpuErrchk(cudaFree(idData));
+
+			if (idTmpCompressed)
+			{
+				if (CUDA_SUCCESS != QuickHelper::freeCompressible((void*)idDataTmp, maxN * sizeof(int), true))
+				{
+					std::cout << "Compressible memory-free failed. Trying normal deallocation" << std::endl;
+					gpuErrchk(cudaFree(idDataTmp));
+				}
+			}
+			else
+				gpuErrchk(cudaFree(idDataTmp));
+
+			
+			
 
 			gpuErrchk(cudaStreamDestroy(stream0));
 		}
