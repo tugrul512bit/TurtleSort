@@ -103,7 +103,7 @@ namespace Quick
 			}
 
 			
-			if (MemoryCompressionSuccessful())
+			if (compressionSupported)
 			{
 				if (optInCompression)
 				{
