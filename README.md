@@ -33,6 +33,26 @@ Compiler options:
 - host: /Ox highest optimization level
 - release mode, x64 selected
 
+# GPGPU Related Algorithms and Technologies Used In This Algorithm
+
+- CUDA Run-time API and a bit of driver API
+- ```__constant__``` memory
+- ```__shared__``` memory
+- Dynamic parallelism
+- Tail-launched kernel
+- Fire-and-forget kernel
+- Multi-way Reduction
+- Atomic updates
+- Warp shuffle
+- CUDA Compressible memory
+- Templated CUDA kernels
+- Divide and conquer
+- Sorting network
+- Indirect (tail) recursion
+- Two-pass algorithm
+- Block synchronization
+- Asynchronous computing
+- Merging (in progress)
   
 # Sample Code
 
