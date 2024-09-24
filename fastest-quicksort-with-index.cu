@@ -290,26 +290,176 @@ namespace Quick
         return;
     }
 
-    // should fit inside constant cache
-    // taken from: https://bertdobbelaere.github.io/sorting_networks.html#N32L185D14
-         __constant__ int sortingNetwork[185][2] = {
-             {0,1},{2,3},{4,5},{6,7},{8,9},{10,11},{12,13},{14,15},{16,17},{18,19},{20,21},{22,23},{24,25},{26,27},{28,29},{30,31},
-             {0,2},{1,3},{4,6},{5,7},{8,10},{9,11},{12,14},{13,15},{16,18},{17,19},{20,22},{21,23},{24,26},{25,27},{28,30},{29,31},
-             {0,4},{1,5},{2,6},{3,7},{8,12},{9,13},{10,14},{11,15},{16,20},{17,21},{18,22},{19,23},{24,28},{25,29},{26,30},{27,31},
-             {0,8},{1,9},{2,10},{3,11},{4,12},{5,13},{6,14},{7,15},{16,24},{17,25},{18,26},{19,27},{20,28},{21,29},{22,30},{23,31},
-             {0,16},{1,8},{2,4},{3,12},{5,10},{6,9},{7,14},{11,13},{15,31},{17,24},{18,20},{19,28},{21,26},{22,25},{23,30},{27,29},
-             {1,2},{3,5},{4,8},{6,22},{7,11},{9,25},{10,12},{13,14},{17,18},{19,21},{20,24},{23,27},{26,28},{29,30},
-             {1,17},{2,18},{3,19},{4,20},{5,10},{7,23},{8,24},{11,27},{12,28},{13,29},{14,30},{21,26},
-             {3,17},{4,16},{5,21},{6,18},{7,9},{8,20},{10,26},{11,23},{13,25},{14,28},{15,27},{22,24},
-             {1,4},{3,8},{5,16},{7,17},{9,21},{10,22},{11,19},{12,20},{14,24},{15,26},{23,28},{27,30},
-             {2,5},{7,8},{9,18},{11,17},{12,16},{13,22},{14,20},{15,19},{23,24},{26,29},
-             {2,4},{6,12},{9,16},{10,11},{13,17},{14,18},{15,22},{19,25},{20,21},{27,29},
-             {5,6},{8,12},{9,10},{11,13},{14,16},{15,17},{18,20},{19,23},{21,22},{25,26},
-             {3,5},{6,7},{8,9},{10,12},{11,14},{13,16},{15,18},{17,20},{19,21},{22,23},{24,25},{26,28},
-             {3,4},{5,6},{7,8},{9,10},{11,12},{13,14},{15,16},{17,18},{19,20},{21,22},{23,24},{25,26},{27,28}
-         };
 
-         __constant__ int snCols[14] = {16, 16, 16, 16, 16, 14, 12, 12, 12, 10, 10, 10, 12, 13};
+    // all sorting networks taken from: https://bertdobbelaere.github.io/sorting_networks.html#N32L185D14
+    // run by single thread
+    __constant__ int sortingNetwork4[5][2] = {
+        {0,2},{1,3 },
+        {0,1},{2,3 },
+        {1,2}      
+    };
+
+    __constant__ int snCols4[3] = { 2,2,1 };
+
+    // run by warp
+    __constant__ int sortingNetwork8[19][2] = {
+        {0,2},{1,3},{4,6},{5,7},
+        {0,4},{1,5},{2,6},{3,7},
+        {0,1},{2,3},{4,5},{6,7},
+        {2,4},{3,5},
+        {1,4},{3,6},
+        {1,2},{3,4},{5,6 }
+    };
+
+    __constant__ int snCols8[6] = { 4,4,4,2,2,3 };
+
+
+    // run by warp
+    __constant__ int sortingNetwork16[60][2] = {
+        {0,13},{1,12},{2,15},{3,14},{4,8},{5,6},{7,11},{9,10 },
+        {0,5},{1,7},{2,9},{3,4},{6,13},{8,14},{10,15},{11,12 },
+        {0,1},{2,3},{4,5},{6,8},{7,9},{10,11},{12,13},{14,15 },
+        {0,2},{1,3},{4,10},{5,11},{6,7},{8,9},{12,14},{13,15 },
+        {1,2},{3,12},{4,6},{5,7},{8,10},{9,11},{13,14 },
+        {1,4},{2,6},{5,8},{7,10},{9,13},{11,14 },
+        {2,4},{3,6},{9,12},{11,13 },
+        {3,5},{6,8},{7,9},{10,12 },
+        {3,4},{5,6},{7,8},{9,10},{11,12 },
+        {6,7},{8,9}
+    };
+
+    __constant__ int snCols16[10] = {8,8,8,8,7,6,4,4,5,2};
+
+
+
+    // should fit inside constant cache
+    // all sorting networks taken from: https://bertdobbelaere.github.io/sorting_networks.html#N32L185D14
+    __constant__ int sortingNetwork32[185][2] = {
+        {0,1},{2,3},{4,5},{6,7},{8,9},{10,11},{12,13},{14,15},{16,17},{18,19},{20,21},{22,23},{24,25},{26,27},{28,29},{30,31},
+        {0,2},{1,3},{4,6},{5,7},{8,10},{9,11},{12,14},{13,15},{16,18},{17,19},{20,22},{21,23},{24,26},{25,27},{28,30},{29,31},
+        {0,4},{1,5},{2,6},{3,7},{8,12},{9,13},{10,14},{11,15},{16,20},{17,21},{18,22},{19,23},{24,28},{25,29},{26,30},{27,31},
+        {0,8},{1,9},{2,10},{3,11},{4,12},{5,13},{6,14},{7,15},{16,24},{17,25},{18,26},{19,27},{20,28},{21,29},{22,30},{23,31},
+        {0,16},{1,8},{2,4},{3,12},{5,10},{6,9},{7,14},{11,13},{15,31},{17,24},{18,20},{19,28},{21,26},{22,25},{23,30},{27,29},
+        {1,2},{3,5},{4,8},{6,22},{7,11},{9,25},{10,12},{13,14},{17,18},{19,21},{20,24},{23,27},{26,28},{29,30},
+        {1,17},{2,18},{3,19},{4,20},{5,10},{7,23},{8,24},{11,27},{12,28},{13,29},{14,30},{21,26},
+        {3,17},{4,16},{5,21},{6,18},{7,9},{8,20},{10,26},{11,23},{13,25},{14,28},{15,27},{22,24},
+        {1,4},{3,8},{5,16},{7,17},{9,21},{10,22},{11,19},{12,20},{14,24},{15,26},{23,28},{27,30},
+        {2,5},{7,8},{9,18},{11,17},{12,16},{13,22},{14,20},{15,19},{23,24},{26,29},
+        {2,4},{6,12},{9,16},{10,11},{13,17},{14,18},{15,22},{19,25},{20,21},{27,29},
+        {5,6},{8,12},{9,10},{11,13},{14,16},{15,17},{18,20},{19,23},{21,22},{25,26},
+        {3,5},{6,7},{8,9},{10,12},{11,14},{13,16},{15,18},{17,20},{19,21},{22,23},{24,25},{26,28},
+        {3,4},{5,6},{7,8},{9,10},{11,12},{13,14},{15,16},{17,18},{19,20},{21,22},{23,24},{25,26},{27,28}
+    };
+
+    __constant__ int snCols32[14] = {16, 16, 16, 16, 16, 14, 12, 12, 12, 10, 10, 10, 12, 13};
+
+
+    
+    template<int ROWS, int COLS,int NUM, typename Type>
+    inline
+    __device__ void sortByNetwork(
+        int (&sortingNetwork) [ROWS][COLS] ,  int (&snCols)[NUM], 
+        Type * arr, int * idArr, Type * cacheData, int * cacheId,
+        const int id, const int startIncluded, const bool trackIdValues, const int num)
+    {
+
+        if (!trackIdValues)
+        {
+            if (id < num)
+            {
+                cacheData[id] = arr[startIncluded + id];
+            }
+
+            __syncwarp();
+
+            int ofs = 0;
+            for (int i = 0; i < NUM; i++)
+            {
+                const int cLim = snCols[i];
+
+                if (id < cLim)
+                {
+                    const int comp0 = sortingNetwork[id + ofs][0];
+                    const int comp1 = sortingNetwork[id + ofs][1];
+
+                    if (comp0 < num && comp1 < num)
+                    {
+                        auto arr1 = cacheData[comp0];
+                        auto arr2 = cacheData[comp1];
+
+                        if (arr2 < arr1)
+                        {
+                            cacheData[comp0] = arr2;
+                            cacheData[comp1] = arr1;
+                        }
+                    }
+                }
+                ofs += cLim;
+                __syncwarp();
+            }
+
+            if (id < num)
+            {
+                arr[startIncluded + id] = cacheData[id];
+
+            }
+
+            __syncwarp();
+        }
+        else
+        {
+
+            if (id < num)
+            {
+                cacheData[id] = arr[startIncluded + id];
+                cacheId[id] = idArr[startIncluded + id];
+            }
+
+            __syncwarp();
+
+            int ofs = 0;
+            for (int i = 0; i < NUM; i++)
+            {
+                const int cLim = snCols[i];
+
+                if (id < cLim)
+                {
+                    const int comp0 = sortingNetwork[id + ofs][0];
+                    const int comp1 = sortingNetwork[id + ofs][1];
+
+                    if (comp0 < num && comp1 < num)
+                    {
+                        auto arr1 = cacheData[comp0];
+                        auto arr2 = cacheData[comp1];
+
+
+                        auto id1 = cacheId[comp0];
+                        auto id2 = cacheId[comp1];
+
+                        if (arr2 < arr1)
+                        {
+                            cacheData[comp0] = arr2;
+                            cacheData[comp1] = arr1;
+
+                            cacheId[comp0] = id2;
+                            cacheId[comp1] = id1;
+                        }
+                    }
+                }
+                ofs += cLim;
+                __syncwarp();
+            }
+
+            if (id < num)
+            {
+                arr[startIncluded + id] = cacheData[id];
+                idArr[startIncluded + id] = cacheId[id];
+            }
+
+            __syncwarp();
+        }
+    }
+
 
     // task pattern: 
     //              task 0      task 1      task 2      task 3      ---> array chunks to sort (no overlap)
@@ -359,107 +509,19 @@ namespace Quick
 
         __shared__ Type cacheData[DIRECTLY_COMPUTE_LIMIT];
         __shared__ int cacheId[DIRECTLY_COMPUTE_LIMIT];
-        if (num >= 2 && num <= DIRECTLY_COMPUTE_LIMIT && bd >= DIRECTLY_COMPUTE_LIMIT)
+        // if data is suitable for 32-input sorting-network, sort directly
+
+        if (num <= DIRECTLY_COMPUTE_LIMIT && bd >= DIRECTLY_COMPUTE_LIMIT)
         {
-      
-            if (!trackIdValues)
-            {
-                if (id < num)
-                {
-                    cacheData[id] = arr[startIncluded + id];
-                }
-
-                __syncwarp();
-
-                int ofs = 0;
-                for (int i = 0; i < 14; i++)
-                {
-                    const int cLim = snCols[i];
-
-                    if (id < cLim)
-                    {
-                        const int comp0 = sortingNetwork[id + ofs][0];
-                        const int comp1 = sortingNetwork[id + ofs][1];
-
-                        if (comp0 < num && comp1 < num)
-                        {
-                            auto arr1 = cacheData[comp0];
-                            auto arr2 = cacheData[comp1];
-
-
-                            if (arr2 < arr1)
-                            {
-                                cacheData[comp0] = arr2;
-                                cacheData[comp1] = arr1;
-
-
-                            }
-                        }
-                    }
-                    ofs += cLim;
-                    __syncwarp();
-                }
-
-                if (id < num)
-                {
-                    arr[startIncluded + id] = cacheData[id];
-     
-                }
-
-                __syncwarp();
-            }
-            else
-            {
-
-                if (id < num)
-                {
-                    cacheData[id] = arr[startIncluded + id];
-                    cacheId[id] = idArr[startIncluded + id];
-                }
-
-                __syncwarp();
-
-                int ofs = 0;
-                for (int i = 0; i < 14; i++)
-                {
-                    const int cLim = snCols[i];
-                    
-                    if (id < cLim)
-                    {
-                        const int comp0 = sortingNetwork[id + ofs][0];
-                        const int comp1 = sortingNetwork[id + ofs][1];
-
-                        if (comp0 < num && comp1 < num)
-                        {
-                            auto arr1 = cacheData[comp0];
-                            auto arr2 = cacheData[comp1];
-
-
-                            auto id1 = cacheId[comp0];
-                            auto id2 = cacheId[comp1];
-
-                            if (arr2 < arr1)
-                            {
-                                cacheData[comp0] = arr2;
-                                cacheData[comp1] = arr1;
-
-                                cacheId[comp0] = id2;
-                                cacheId[comp1] = id1;
-                            }
-                        }
-                    }
-                    ofs += cLim;
-                    __syncwarp();
-                }
-
-                if (id < num)
-                {
-                    arr[startIncluded + id] = cacheData[id];
-                    idArr[startIncluded + id] = cacheId[id];
-                }
-
-                __syncwarp();
-            }
+         
+            if(num<=4)
+                sortByNetwork<5, 2, 3, Type>(sortingNetwork4, snCols4, arr, idArr, cacheData, cacheId, id, startIncluded, trackIdValues, num);
+            else if(num<=8)
+                sortByNetwork<19, 2, 6, Type>(sortingNetwork8, snCols8, arr, idArr, cacheData, cacheId, id, startIncluded, trackIdValues, num);
+            else if(num<=16)
+                sortByNetwork<60, 2, 10,Type>(sortingNetwork16, snCols16, arr, idArr, cacheData, cacheId, id, startIncluded, trackIdValues, num);
+            else if(num<=32)
+                sortByNetwork<185,2,14,Type>(sortingNetwork32,snCols32,arr,idArr,cacheData,cacheId,id,startIncluded,trackIdValues,num);
             return;
         }
 
