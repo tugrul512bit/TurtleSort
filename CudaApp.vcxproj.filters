@@ -25,6 +25,7 @@
     <Text Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="helper.cuh" />
+    <ClInclude Include="quick-helper.cuh" />
+    <ClInclude Include="quick-buffer.cuh" />
   </ItemGroup>
 </Project>

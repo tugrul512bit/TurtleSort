@@ -25,6 +25,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef CUDA_HELPER_DEFINED
+#define CUDA_HELPER_DEFINED
+
 
 #include <string.h>
 
@@ -123,3 +126,5 @@ namespace QuickHelper
         return cudaSuccess;
     }
 }
+
+#endif

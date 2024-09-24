@@ -1,0 +1,308 @@
+﻿  Compiling CUDA source file fastest-quicksort-with-index.cu...
+  Compiling CUDA source file main.cpp...
+  Compiling CUDA source file fastest-quicksort-with-index.cuh...
+  
+  C:\Users\admin\Desktop\opencl\CudaApp>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -D_DEBUG -D_CONSOLE -D"_UNICODE" -D"UNICODE" -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc143.pdb" -o C:\Users\admin\Desktop\opencl\CudaApp\x64\Debug\fastest-quicksort-with-index.cu.obj "C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu" 
+  
+  C:\Users\admin\Desktop\opencl\CudaApp>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -D_DEBUG -D_CONSOLE -D"_UNICODE" -D"UNICODE" -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc143.pdb" -o C:\Users\admin\Desktop\opencl\CudaApp\x64\Debug\main.cpp.obj "C:\Users\admin\Desktop\opencl\CudaApp\main.cpp" 
+  
+  C:\Users\admin\Desktop\opencl\CudaApp>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -D_DEBUG -D_CONSOLE -D"_UNICODE" -D"UNICODE" -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc143.pdb" -o C:\Users\admin\Desktop\opencl\CudaApp\x64\Debug\fastest-quicksort-with-index.cuh.obj "C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cuh" 
+  device_functions.h is an internal header file and must not be used directly.  This file will be removed in a future CUDA release.  Please use cuda_runtime_api.h or cuda_runtime.h instead.
+  device_functions.h is an internal header file and must not be used directly.  This file will be removed in a future CUDA release.  Please use cuda_runtime_api.h or cuda_runtime.h instead.
+  device_functions.h is an internal header file and must not be used directly.  This file will be removed in a future CUDA release.  Please use cuda_runtime_api.h or cuda_runtime.h instead.
+  device_functions.h is an internal header file and must not be used directly.  This file will be removed in a future CUDA release.  Please use cuda_runtime_api.h or cuda_runtime.h instead.
+  device_functions.h is an internal header file and must not be used directly.  This file will be removed in a future CUDA release.  Please use cuda_runtime_api.h or cuda_runtime.h instead.
+  device_functions.h is an internal header file and must not be used directly.  This file will be removed in a future CUDA release.  Please use cuda_runtime_api.h or cuda_runtime.h instead.
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(57): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    bruteSort << <numTasks[3], BRUTE_FORCE_LIMIT, 0, ((cudaStream_t)0x4) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=int]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=int]" at line 801
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(332): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                copyTasksBack << <1, 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, arr, numTasks, tasks, tasks2, tasks3, tasks4, idArr, arrTmp, idArrTmp);
+                ^
+            detected during:
+              instantiation of "void Quick::quickSortWithoutStreamCompaction(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=int]" at line 62
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=int]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=int]" at line 801
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(62): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=int]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=int]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(121): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                resetNumTasks << <1, 1, 0, ((cudaStream_t)0x3) >> > (
+                ^
+            detected during instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=int]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(57): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    bruteSort << <numTasks[3], BRUTE_FORCE_LIMIT, 0, ((cudaStream_t)0x4) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=short]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=short]" at line 810
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(332): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                copyTasksBack << <1, 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, arr, numTasks, tasks, tasks2, tasks3, tasks4, idArr, arrTmp, idArrTmp);
+                ^
+            detected during:
+              instantiation of "void Quick::quickSortWithoutStreamCompaction(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=short]" at line 62
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=short]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=short]" at line 810
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(62): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=short]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=short]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(121): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                resetNumTasks << <1, 1, 0, ((cudaStream_t)0x3) >> > (
+                ^
+            detected during instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=short]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(57): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    bruteSort << <numTasks[3], BRUTE_FORCE_LIMIT, 0, ((cudaStream_t)0x4) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=char]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=char]" at line 819
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(332): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                copyTasksBack << <1, 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, arr, numTasks, tasks, tasks2, tasks3, tasks4, idArr, arrTmp, idArrTmp);
+                ^
+            detected during:
+              instantiation of "void Quick::quickSortWithoutStreamCompaction(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=char]" at line 62
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=char]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=char]" at line 819
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(62): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=char]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=char]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(121): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                resetNumTasks << <1, 1, 0, ((cudaStream_t)0x3) >> > (
+                ^
+            detected during instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=char]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(57): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    bruteSort << <numTasks[3], BRUTE_FORCE_LIMIT, 0, ((cudaStream_t)0x4) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=long]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=long]" at line 828
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(332): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                copyTasksBack << <1, 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, arr, numTasks, tasks, tasks2, tasks3, tasks4, idArr, arrTmp, idArrTmp);
+                ^
+            detected during:
+              instantiation of "void Quick::quickSortWithoutStreamCompaction(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=long]" at line 62
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=long]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=long]" at line 828
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(62): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=long]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=long]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(121): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                resetNumTasks << <1, 1, 0, ((cudaStream_t)0x3) >> > (
+                ^
+            detected during instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=long]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(57): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    bruteSort << <numTasks[3], BRUTE_FORCE_LIMIT, 0, ((cudaStream_t)0x4) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned int]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned int]" at line 846
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(332): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                copyTasksBack << <1, 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, arr, numTasks, tasks, tasks2, tasks3, tasks4, idArr, arrTmp, idArrTmp);
+                ^
+            detected during:
+              instantiation of "void Quick::quickSortWithoutStreamCompaction(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned int]" at line 62
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned int]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned int]" at line 846
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(62): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned int]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned int]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(121): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                resetNumTasks << <1, 1, 0, ((cudaStream_t)0x3) >> > (
+                ^
+            detected during instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned int]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(57): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    bruteSort << <numTasks[3], BRUTE_FORCE_LIMIT, 0, ((cudaStream_t)0x4) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned short]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned short]" at line 855
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(332): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                copyTasksBack << <1, 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, arr, numTasks, tasks, tasks2, tasks3, tasks4, idArr, arrTmp, idArrTmp);
+                ^
+            detected during:
+              instantiation of "void Quick::quickSortWithoutStreamCompaction(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned short]" at line 62
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned short]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned short]" at line 855
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(62): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned short]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned short]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(121): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                resetNumTasks << <1, 1, 0, ((cudaStream_t)0x3) >> > (
+                ^
+            detected during instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned short]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(57): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    bruteSort << <numTasks[3], BRUTE_FORCE_LIMIT, 0, ((cudaStream_t)0x4) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned char]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned char]" at line 864
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(332): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                copyTasksBack << <1, 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, arr, numTasks, tasks, tasks2, tasks3, tasks4, idArr, arrTmp, idArrTmp);
+                ^
+            detected during:
+              instantiation of "void Quick::quickSortWithoutStreamCompaction(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned char]" at line 62
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned char]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned char]" at line 864
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(62): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned char]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned char]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(121): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                resetNumTasks << <1, 1, 0, ((cudaStream_t)0x3) >> > (
+                ^
+            detected during instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned char]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(57): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    bruteSort << <numTasks[3], BRUTE_FORCE_LIMIT, 0, ((cudaStream_t)0x4) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned long]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned long]" at line 873
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(332): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                copyTasksBack << <1, 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, arr, numTasks, tasks, tasks2, tasks3, tasks4, idArr, arrTmp, idArrTmp);
+                ^
+            detected during:
+              instantiation of "void Quick::quickSortWithoutStreamCompaction(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned long]" at line 62
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned long]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned long]" at line 873
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(62): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned long]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned long]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(121): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                resetNumTasks << <1, 1, 0, ((cudaStream_t)0x3) >> > (
+                ^
+            detected during instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=unsigned long]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(57): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    bruteSort << <numTasks[3], BRUTE_FORCE_LIMIT, 0, ((cudaStream_t)0x4) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=float]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=float]" at line 884
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(332): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                copyTasksBack << <1, 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, arr, numTasks, tasks, tasks2, tasks3, tasks4, idArr, arrTmp, idArrTmp);
+                ^
+            detected during:
+              instantiation of "void Quick::quickSortWithoutStreamCompaction(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=float]" at line 62
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=float]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=float]" at line 884
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(62): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=float]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=float]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(121): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                resetNumTasks << <1, 1, 0, ((cudaStream_t)0x3) >> > (
+                ^
+            detected during instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=float]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(57): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    bruteSort << <numTasks[3], BRUTE_FORCE_LIMIT, 0, ((cudaStream_t)0x4) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=double]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=double]" at line 893
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(332): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                copyTasksBack << <1, 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, arr, numTasks, tasks, tasks2, tasks3, tasks4, idArr, arrTmp, idArrTmp);
+                ^
+            detected during:
+              instantiation of "void Quick::quickSortWithoutStreamCompaction(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=double]" at line 62
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=double]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=double]" at line 893
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(62): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                    quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, ((cudaStream_t)0x3) >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
+                    ^
+            detected during:
+              instantiation of "void Quick::resetNumTasks(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=double]" at line 122
+              instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=double]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu(121): error : kernel launch from __device__ or __global__ functions requires separate compilation mode
+                resetNumTasks << <1, 1, 0, ((cudaStream_t)0x3) >> > (
+                ^
+            detected during instantiation of "void Quick::copyTasksBack(__nv_bool, Type *, int *, int *, int *, int *, int *, int *, Type *, int *) [with Type=double]" at line 332
+  
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cuh(125): warning #2361-D: invalid narrowing conversion from "unsigned long long" to "int"
+    			int hostTasks[2] = { 0,toSort->size() - 1 };
+    			                       ^
+            detected during instantiation of "void Quick::FastestQuicksort<Type, TrackIndex>::StartSorting(std::vector<Type, std::allocator<Type>> *, std::vector<int, std::allocator<int>> *) [with Type=int, TrackIndex=true]" at line 16 of C:\Users\admin\Desktop\opencl\CudaApp\main.cpp
+  
+  Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+  
+  40 errors detected in the compilation of "C:/Users/admin/Desktop/opencl/CudaApp/fastest-quicksort-with-index.cu".
+  fastest-quicksort-with-index.cu
+C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\BuildCustomizations\CUDA 12.2.targets(799,9): error MSB3721: The command ""C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.35.32215\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -D_DEBUG -D_CONSOLE -D"_UNICODE" -D"UNICODE" -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc143.pdb" -o C:\Users\admin\Desktop\opencl\CudaApp\x64\Debug\fastest-quicksort-with-index.cu.obj "C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cu"" exited with code 1.
+  fastest-quicksort-with-index.cuh
+  main.cpp
+  tmpxft_00005ce8_00000000-7_fastest-quicksort-with-index.cudafe1.cpp
+  device_functions.h is an internal header file and must not be used directly.  This file will be removed in a future CUDA release.  Please use cuda_runtime_api.h or cuda_runtime.h instead.
+  device_functions.h is an internal header file and must not be used directly.  This file will be removed in a future CUDA release.  Please use cuda_runtime_api.h or cuda_runtime.h instead.
+  tmpxft_00004034_00000000-7_main.cudafe1.cpp
+  device_functions.h is an internal header file and must not be used directly.  This file will be removed in a future CUDA release.  Please use cuda_runtime_api.h or cuda_runtime.h instead.
+  device_functions.h is an internal header file and must not be used directly.  This file will be removed in a future CUDA release.  Please use cuda_runtime_api.h or cuda_runtime.h instead.
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cuh(125): warning C4838: conversion from 'unsigned __int64' to 'int' requires a narrowing conversion
+  C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cuh(120): note: while compiling class template member function 'void Quick::FastestQuicksort<int,true>::StartSorting(std::vector<int,std::allocator<int>> *,std::vector<int,std::allocator<int>> *)'
+  C:\Users\admin\Desktop\opencl\CudaApp\main.cpp(16): note: see reference to function template instantiation 'void Quick::FastestQuicksort<int,true>::StartSorting(std::vector<int,std::allocator<int>> *,std::vector<int,std::allocator<int>> *)' being compiled
+  C:\Users\admin\Desktop\opencl\CudaApp\main.cpp(14): note: see reference to class template instantiation 'Quick::FastestQuicksort<int,true>' being compiled
+C:\Users\admin\Desktop\opencl\CudaApp\fastest-quicksort-with-index.cuh(125): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
