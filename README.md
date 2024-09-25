@@ -2,6 +2,8 @@
 
 Quicksort algorithm boosted with optional paths for different sized data chunks with different sorting algorithms while keeping the "quick" part as main coordinator. Uses CUDA for accelerating parallel algorithms such as reductions, counting and others.
 
+![How it works](https://github.com/tugrul512bit/FastestQuicksort/blob/master/quicksort.drawio%20(1).png)
+
 
 # Features:
 
