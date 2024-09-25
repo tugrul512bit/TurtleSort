@@ -53,6 +53,8 @@ Compiler options:
 - Block synchronization
 - Asynchronous computing
 - Merging (in progress)
+- Binary search
+- Parallel Rank computation
   
 # Sample Code
 
