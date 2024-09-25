@@ -12,7 +12,10 @@ Quicksort algorithm boosted with optional paths for different sized data chunks 
 - Already-sorted arrays are 2x slow compared to random-initialized arrays. Being only 2x slower for 64M suggests that either the constant factor in worst-case O(n^2 x c) is very good or it is not O(n^2) anymore due to said optimizations.
 
 # Performance
-- 16x faster than std::qsort, 8x faster than std::sort for 64M random elements (better when not tracking index)
+- Up to 25x faster than std::qsort
+- Up to 15x faster than std::sort
+- Runs faster when array elements have duplicates (but std::sort runs even faster)
+- Same speed with sorted array (but std::sort runs faster so theres only 2x speedup against std::sort)
 
 
 Test system: RTX4070, Ryzen7900, DDR5-6000 dual-channel RAM.
