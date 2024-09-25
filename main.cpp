@@ -1,4 +1,5 @@
 #include"fastest-quicksort-with-index.cuh" 
+#include <execution>
 #include<algorithm>
 
 // test program
@@ -6,8 +7,8 @@ int main()
 {
 
 
-    using Type = char;
-    const int n = 4000001;
+    using Type = int;
+    const int n = 12000000;
 
 
     // n: number of elements supported for sorting
@@ -38,7 +39,7 @@ int main()
         Type data;
         int index;
     };
-    std::vector<StdData> backup(n), backup2(n);
+    std::vector<StdData> backup(n), backup2(n), backup3(n);
     for (int j = 0; j < 10; j++)
     {
         std::cout << "-------------------------" << std::endl;
@@ -50,9 +51,11 @@ int main()
             backup2[i].data = hostData[i];
             backup[i].index = hostData[i];
             backup2[i].index = hostData[i];
+            backup3[i].data = hostData[i];
+            backup3[i].index = hostData[i];
         }
 
-        size_t t1, t2, t3;
+        size_t t1, t2, t3,t4;
         {
             Quick::Bench bench(&t1);
             sort.StartSorting(&hostData, &hostIndex);
@@ -86,7 +89,15 @@ int main()
             Quick::Bench bench(&t3);
             std::sort(backup2.begin(), backup2.end(), [](auto& e1, auto& e2) { return e1.data < e2.data; });
         }
-        std::cout << "gpu: " << t1 / 1000000000.0 << "   std::qsort:" << t2 / 1000000000.0 << "   std::sort:" << t3 / 1000000000.0 << std::endl;
+        {
+            Quick::Bench bench(&t4);
+            std::sort(std::execution::par_unseq, backup3.begin(), backup3.end(), [](auto& e1, auto& e2) { return e1.data < e2.data; });
+        }
+        std::cout << "gpu: " << t1 / 1000000000.0 << 
+            "   std::qsort:" << t2 / 1000000000.0 << 
+            "   std::sort:" << t3 / 1000000000.0 << 
+            "   std::sort(par_unseq):" << t4 / 1000000000.0 <<
+            std::endl;
         bool err = false, err2 = false;
 
 
