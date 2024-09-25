@@ -214,7 +214,7 @@ namespace Quick
 
         if(id< sizeChunk2)
         {
-            auto val = arr[startChunk2+id];
+            Type val = arr[startChunk2+id];
             int idTracked = 0;
             if (trackIdValues)
                 idTracked = arr[startChunk2 + id];
@@ -249,7 +249,7 @@ namespace Quick
 
         if(id<sizeChunk1)
         {
-            int val = arr[startChunk1 + id];
+            Type val = arr[startChunk1 + id];
             int idTracked = 0;
             if (trackIdValues)
                 idTracked = arr[startChunk1 + id];
@@ -491,8 +491,8 @@ namespace Quick
 
                 if (id < cLim)
                 {
-                    const int comp0 = sortingNetwork[id + ofs][0];
-                    const int comp1 = sortingNetwork[id + ofs][1];
+                    const int comp0 = sortingNetwork[id + ofs][0]; // this should be optimized. id values are different per thread.
+                    const int comp1 = sortingNetwork[id + ofs][1]; // but different blocks need similar id's
 
                     if (comp0 < num && comp1 < num)
                     {
@@ -572,6 +572,13 @@ namespace Quick
         }
     }
 
+   
+    template<typename Type>
+    inline
+    __device__ const bool equals(const Type e1, const Type e2)
+    {
+        return  !(e1 < e2) && !(e1 > e2);
+    }
 
     // task pattern: 
     //              task 0      task 1      task 2      task 3      ---> array chunks to sort (no overlap)
@@ -692,15 +699,15 @@ namespace Quick
             if (curId < num)
             {
                 const Type data = arr[curId + startIncluded];                
-                if (data == pivotLeft)
+                if (equals(data,pivotLeft))
                 {
                     countPivotLeft++;
                 }
-                else if (data == pivot)
+                else if (equals(data,pivot))
                 {
                     countPivot++;
                 }
-                else if (data == pivotRight)
+                else if (equals(data,pivotRight))
                 {
                     countPivotRight++;
                 }
@@ -779,20 +786,20 @@ namespace Quick
                     dataId = idArr[curId + startIncluded];
                 // todo: pivot values are known so they are "counting", no need to copy values anywhere
                 // but id values will be required
-                if (data == pivotLeft)
+                if (equals(data,pivotLeft))
                 {
                     auto idx = atomicAdd(&indexPivotLeft, 1);
                     if (trackIdValues)
                         idArrTmp[offsetPivotLeft+idx] = dataId;
 
                 }
-                else if (data == pivot)
+                else if (equals(data,pivot))
                 {
                     auto idx = atomicAdd(&indexPivot, 1);
                     if (trackIdValues)
                         idArrTmp[offsetPivot + idx] = dataId;
                 }
-                else if (data == pivotRight)
+                else if (equals(data,pivotRight))
                 {
                     auto idx = atomicAdd(&indexPivotRight, 1);
                     if (trackIdValues)

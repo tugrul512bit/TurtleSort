@@ -7,7 +7,7 @@ int main()
 {
 
 
-    using Type = int;
+    using Type = char;
     const int n = 12000000;
 
 
@@ -45,7 +45,7 @@ int main()
         std::cout << "-------------------------" << std::endl;
         for (int i = 0; i < n; i++)
         {
-            hostData[i] = rand();
+            hostData[i] = rand()*3.14f;
             hostIndex[i] = hostData[i];
             backup[i].data = hostData[i];
             backup2[i].data = hostData[i];
@@ -104,20 +104,20 @@ int main()
         for (int i = 0; i < n - 1; i++)
             if (hostData[i] > hostData[i + 1])
             {
-                std::cout << "error at: " << i << ": " << hostData[i] << " " << hostData[i + 1] << " " << hostData[i + 2] << std::endl;
+                std::cout << "error at: " << i << ": " << hostData[i] << " " << hostData[i + 1]  << std::endl;
                 err = true;
                 j = 1000000;
                 return 1;
             }
 
-
         for (int i = 0; i < n; i++)
         {
-            if (hostData[i] != hostIndex[i])
+            if ((hostData[i] < hostIndex[i]) || (hostData[i] > hostIndex[i]))
             {
                 err2 = true;
                 j = 1000000;
                 std::cout << "error: index calculation wrong" << std::endl;
+                std::cout << hostData[i] << " " << hostIndex[i] << std::endl;
                 return 1;
             }
         }
