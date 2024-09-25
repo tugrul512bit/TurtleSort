@@ -215,6 +215,9 @@ namespace Quick
         if(id< sizeChunk2)
         {
             auto val = arr[startChunk2+id];
+            int idTracked = 0;
+            if (trackIdValues)
+                idTracked = arr[startChunk2 + id];
             int l = startChunk1;
             int r = stopChunk1;
             int m = (r - l) / 2 + l;
@@ -239,13 +242,17 @@ namespace Quick
 
 
             arrTmp[m + id] = val;
-
+            if(trackIdValues)
+                idArrTmp[m + id] = idTracked;
         }
 
 
         if(id<sizeChunk1)
         {
             int val = arr[startChunk1 + id];
+            int idTracked = 0;
+            if (trackIdValues)
+                idTracked = arr[startChunk1 + id];
             int l = startChunk2;
             int r = stopChunk2;
             int m = (r - l) / 2 + l;
@@ -271,7 +278,8 @@ namespace Quick
 
 
             arrTmp[m + id - startChunk2 + startChunk1] = val;
-
+            if (trackIdValues)
+                idArrTmp[m + id - startChunk2 + startChunk1] = idTracked;
         }
     }
 
@@ -990,6 +998,19 @@ namespace Quick
             int* __restrict__ idData,
             short* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
+
+    template
+        __global__ void mergeSortedChunks(
+            const bool trackIdValues, int* __restrict__ tasks, short* __restrict__ arr,
+            short* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+
+    template
+        __global__ void copyMergedChunkBack(
+            const bool trackIdValues, int* __restrict__ tasks, short* __restrict__ arr,
+            short* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+
+
+
     // char data
     template
         __global__ void copyTasksBack(
@@ -998,6 +1019,19 @@ namespace Quick
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
             int* __restrict__ idData,
             char* __restrict__ arrTmp, int* __restrict__ idArrTmp);
+
+
+
+    template
+        __global__ void mergeSortedChunks(
+            const bool trackIdValues, int* __restrict__ tasks, char* __restrict__ arr,
+            char* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+
+    template
+        __global__ void copyMergedChunkBack(
+            const bool trackIdValues, int* __restrict__ tasks, char* __restrict__ arr,
+            char* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+
 
     // long data
     template
@@ -1009,7 +1043,15 @@ namespace Quick
             long* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
 
+    template
+        __global__ void mergeSortedChunks(
+            const bool trackIdValues, int* __restrict__ tasks, long* __restrict__ arr,
+            long* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 
+    template
+        __global__ void copyMergedChunkBack(
+            const bool trackIdValues, int* __restrict__ tasks, long* __restrict__ arr,
+            long* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 
 
 
@@ -1026,6 +1068,20 @@ namespace Quick
             int* __restrict__ idData,
             unsigned int* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
+
+    template
+        __global__ void mergeSortedChunks(
+            const bool trackIdValues, int* __restrict__ tasks, unsigned int* __restrict__ arr,
+            unsigned int* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+
+    template
+        __global__ void copyMergedChunkBack(
+            const bool trackIdValues, int* __restrict__ tasks, unsigned int* __restrict__ arr,
+            unsigned int* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+
+
+
+
     // unsigned short data
     template
         __global__ void copyTasksBack(
@@ -1035,6 +1091,19 @@ namespace Quick
             int* __restrict__ idData,
             unsigned short* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
+
+
+    template
+        __global__ void mergeSortedChunks(
+            const bool trackIdValues, int* __restrict__ tasks, unsigned short* __restrict__ arr,
+            unsigned short* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+
+    template
+        __global__ void copyMergedChunkBack(
+            const bool trackIdValues, int* __restrict__ tasks, unsigned short* __restrict__ arr,
+            unsigned short* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+
+
     // unsigned char data
     template
         __global__ void copyTasksBack(
@@ -1043,6 +1112,20 @@ namespace Quick
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
             int* __restrict__ idData,
             unsigned char* __restrict__ arrTmp, int* __restrict__ idArrTmp);
+
+    template
+        __global__ void mergeSortedChunks(
+            const bool trackIdValues, int* __restrict__ tasks, unsigned char* __restrict__ arr,
+            unsigned char* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+
+    template
+        __global__ void copyMergedChunkBack(
+            const bool trackIdValues, int* __restrict__ tasks, unsigned char* __restrict__ arr,
+            unsigned char* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+
+
+
+
 
     // unsigned long data
     template
@@ -1054,6 +1137,16 @@ namespace Quick
             unsigned long* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
 
+    template
+        __global__ void mergeSortedChunks(
+            const bool trackIdValues, int* __restrict__ tasks, unsigned long* __restrict__ arr,
+            unsigned long* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+
+    template
+        __global__ void copyMergedChunkBack(
+            const bool trackIdValues, int* __restrict__ tasks, unsigned long* __restrict__ arr,
+            unsigned long* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+
 
     // float data
     template
@@ -1063,6 +1156,17 @@ namespace Quick
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
             int* __restrict__ idData,
             float* __restrict__ arrTmp, int* __restrict__ idArrTmp);
+
+
+    template
+        __global__ void mergeSortedChunks(
+            const bool trackIdValues, int* __restrict__ tasks, float* __restrict__ arr,
+            float * __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+
+    template
+        __global__ void copyMergedChunkBack(
+            const bool trackIdValues, int* __restrict__ tasks, float* __restrict__ arr,
+            float* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 
     // double data
     template
@@ -1074,7 +1178,15 @@ namespace Quick
             double* __restrict__ arrTmp, int* __restrict__ idArrTmp);
 
 
+    template
+        __global__ void mergeSortedChunks(
+            const bool trackIdValues, int* __restrict__ tasks, double* __restrict__ arr,
+            double* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 
+    template
+        __global__ void copyMergedChunkBack(
+            const bool trackIdValues, int* __restrict__ tasks, double* __restrict__ arr,
+            double* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 
 
 }

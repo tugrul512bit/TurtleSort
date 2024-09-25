@@ -99,7 +99,7 @@ int main()
     }
 
 
-    using Type = int;
+    using Type = long;
     constexpr int n = 1024*1024*4;
 
 
@@ -132,7 +132,7 @@ int main()
         int index;
     };
     std::vector<StdData> backup(n), backup2(n);
-    for (int j = 0; j < 25; j++)
+    for (int j = 0; j < 10; j++)
     {
         std::cout << "-------------------------" << std::endl;
         for (int i = 0; i < n; i++)
