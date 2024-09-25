@@ -197,7 +197,7 @@ int main()
 
     // n: number of elements supported for sorting
     // compress: (if possible) enables nvidia's compressible memory to possibly increase effective bandwidth/cache capacity
-    bool compress = false;
+    bool compress = true;
 
     Quick::FastestQuicksort<Type> sortVal(n, compress);
     std::vector<Type> sample = { 5,4,3,9,8,7 };
@@ -284,7 +284,7 @@ int main()
                 break;
             }
 
-       
+      
         for (int i = 0; i < n; i++)
         {
             if (hostData[i] != hostIndex[i])
