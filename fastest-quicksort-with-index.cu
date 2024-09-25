@@ -36,7 +36,7 @@ namespace Quick
     __global__ void resetNumTasks(
         const bool trackIdValues,
         Type* __restrict__ data, int* __restrict__ numTasks,
-        int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,        
+        int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
         int* __restrict__ idData,
         Type* __restrict__ arrTmp, int* __restrict__ idArrTmp)
     {
@@ -50,7 +50,7 @@ namespace Quick
             numTasks[3] = numTask2;
             numTasks[0] = 0;
             numTasks[1] = 0;
-            //printf("\n %i %i \n", numTasks[2], numTasks[3]);
+
             __syncthreads();
 
             if (numTasks[3] > 0)
@@ -58,21 +58,7 @@ namespace Quick
 
 
             if (numTasks[2] > 0)
-            {
                 quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, cudaStreamTailLaunch >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
-                /*
-                if (numTask1 < 64)
-                    quickSortWithoutStreamCompaction << <numTasks[2], 1024, 0, cudaStreamTailLaunch >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
-                else if (numTask1 < 64 * 16)
-                    quickSortWithoutStreamCompaction << <numTasks[2], 512, 0, cudaStreamTailLaunch >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
-                else if (numTask1 < 64 * 16 * 16)
-                    quickSortWithoutStreamCompaction << <numTasks[2], 256, 0, cudaStreamTailLaunch >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
-                else
-                    quickSortWithoutStreamCompaction << <numTasks[2], DIRECTLY_COMPUTE_LIMIT, 0, cudaStreamTailLaunch >> > (trackIdValues, data, numTasks, tasks, tasks2, tasks3, tasks4, idData, arrTmp, idArrTmp);
-              */
-
-            }
-
 
         }
     }
@@ -198,6 +184,122 @@ namespace Quick
             arr[startIncluded + id] = cache[id];
             if (trackIdValues)
                 idArr[startIncluded + id] = idTracker[id];
+        }
+    }
+
+    // call this log2n times while doubling size on each call
+    // merge 2 chunks into single array
+    // single block or even single 
+    template<typename Type>
+    __global__ void mergeSortedChunks(
+        const bool trackIdValues,
+        int* __restrict__ tasks,
+        Type* __restrict__ arr, Type* __restrict__ arrTmp,
+        int* __restrict__ idArr, int* __restrict__ idArrTmp
+    )
+    {
+        const int id = threadIdx.x + blockIdx.x * blockDim.x;
+
+      
+        // inclusive values
+        const int startChunk1 = tasks[0];
+        const int stopChunk1 = tasks[1];
+        const int startChunk2 = tasks[2];
+        const int stopChunk2 = tasks[3];
+      
+        const int sizeChunk1 = stopChunk1 - startChunk1 + 1;
+        const int sizeChunk2 = stopChunk2 - startChunk2 + 1;
+
+
+
+        if(id< sizeChunk2)
+        {
+            auto val = arr[startChunk2+id];
+            int l = startChunk1;
+            int r = stopChunk1;
+            int m = (r - l) / 2 + l;
+            bool dir = false;
+
+            while (r >= l)
+            {
+
+                // if bigger, go right
+                if (!(val < arr[m]))
+                {
+                    l = m + 1;
+                    dir = true;
+                }
+                else
+                {
+                    r = m - 1;
+                    dir = false;
+                }
+                m = (r - l) / 2 + l;
+            }
+
+
+            arrTmp[m + id] = val;
+
+        }
+
+
+        if(id<sizeChunk1)
+        {
+            int val = arr[startChunk1 + id];
+            int l = startChunk2;
+            int r = stopChunk2;
+            int m = (r - l) / 2 + l;
+            bool dir = false;
+
+            while (r >= l)
+            {
+
+                // if bigger, go right
+                if (val > arr[m])
+                {
+                    l = m + 1;
+                    dir = true;
+                }
+                else
+                {
+                    r = m - 1;
+                    dir = false;
+                }
+                m = (r - l) / 2 + l;
+
+            }
+
+
+            arrTmp[m + id - startChunk2 + startChunk1] = val;
+
+        }
+    }
+
+
+    template<typename Type>
+    __global__ void copyMergedChunkBack(
+        const bool trackIdValues,
+        int* __restrict__ tasks,
+        Type* __restrict__ arr, Type* __restrict__ arrTmp,
+        int* __restrict__ idArr, int* __restrict__ idArrTmp
+    )
+    {
+        const int id = threadIdx.x + blockIdx.x * blockDim.x;
+
+
+
+        // inclusive values
+        const int startChunk1 = tasks[0];
+        const int stopChunk1 = tasks[1];
+        const int startChunk2 = tasks[2];
+        const int stopChunk2 = tasks[3];
+
+        const int sizeChunk1 = stopChunk1 - startChunk1 + 1;
+        const int sizeChunk2 = stopChunk2 - startChunk2 + 1;
+
+        if (id < sizeChunk1 + sizeChunk2)
+        {
+            arr[startChunk1+id] = arrTmp[startChunk1+id];
         }
     }
 
@@ -866,6 +968,18 @@ namespace Quick
             int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,
             int* __restrict__ idData,
             int* __restrict__ arrTmp, int* __restrict__ idArrTmp);
+
+    template
+    __global__ void mergeSortedChunks(
+        const bool trackIdValues,int* __restrict__ tasks,int* __restrict__ arr, 
+        int* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+
+    template
+        __global__ void copyMergedChunkBack(
+            const bool trackIdValues, int* __restrict__ tasks, int* __restrict__ arr,
+            int* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+    
+
 
     // short data
     template

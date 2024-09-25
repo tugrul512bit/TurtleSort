@@ -11,6 +11,7 @@
 #include <device_functions.h>
 #include "quick-buffer.cuh"
 #include <memory>
+#include <algorithm>
 namespace Quick
 {
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
@@ -31,6 +32,14 @@ namespace Quick
 		int* __restrict__ idData,Type*__restrict__ arrTmp,int*__restrict__ idArrTmp);
 
 
+	template<typename Type>
+		__global__ void mergeSortedChunks(const bool trackIdValues, int* __restrict__ tasks, Type* __restrict__ arr, 
+			Type* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+
+		template<typename Type>
+		__global__ void copyMergedChunkBack(const bool trackIdValues, int* __restrict__ tasks, Type* __restrict__ arr,
+			Type* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
+		
 
 	/*
 		"fast" in context of how "free" a CPU core is
@@ -63,10 +72,16 @@ namespace Quick
 		std::chrono::nanoseconds t1, t2;
 		cudaStream_t stream0;
 
-		
+		std::vector<int> hostTasks;
+		bool merge;
+		int nChunks;
+		int chunkSize; // not same for the last chunk
 	public:
 		FastestQuicksort(int maxElements, bool optInCompression=false)
 		{
+			chunkSize = 1024 * 64;
+			nChunks = 0;
+			merge = false;
 			deviceId = 0;
 			maxN = maxElements;
 			toSort = nullptr;
@@ -128,14 +143,63 @@ namespace Quick
 			t1 = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
 			toSort = arrayToSort;
 			idTracker = indicesToTrack;
+
+			nChunks = 8;
+			chunkSize = toSort->size() / 8;
+			int curOfs = 0;
 			int numTasksHost[4] = { 1,0,1,0 };
-			int hostTasks[2] = { 0,toSort->size() - 1 };
+
+			hostTasks.clear();
+			const int sz = toSort->size();
+			if (chunkSize>1)
+			{
+				merge = true;
+				while (curOfs < sz)
+				{
+					if (curOfs < sz-1)
+						hostTasks.push_back(curOfs);
+					else
+						break;
+
+
+					if (curOfs + chunkSize - 1 < sz)
+						hostTasks.push_back(curOfs + chunkSize - 1);
+					else
+						hostTasks.push_back(sz - 1);
+						
+					const int curChunkSize = 1 + hostTasks[hostTasks.size() - 1] - hostTasks[hostTasks.size() - 2];
+
+					//nChunks++;
+					curOfs += curChunkSize;
+				}
+				numTasksHost[0] = nChunks;
+				numTasksHost[1] = 0;
+				numTasksHost[2] = nChunks;
+				numTasksHost[3] = 0;
+			}
+			else
+			{
+				numTasksHost[0] = 1;
+				numTasksHost[1] = 0;
+				numTasksHost[2] = 1;
+				numTasksHost[3] = 0;
+				hostTasks.push_back(0);
+				hostTasks.push_back(sz - 1);
+				merge = false;
+			}
 			
+	
+			if (hostTasks.size() % 2 != 0)
+			{
+				std::cout << "ERROR: task scheduling error!" << std::endl;
+
+				return;
+			}
 			gpuErrchk(cudaMemcpy((void*)data->Data(), toSort->data(), toSort->size() * sizeof(Type), cudaMemcpyHostToDevice));
 			
 			gpuErrchk(cudaMemcpy((void*)numTasks->Data(), numTasksHost, 4 * sizeof(int), cudaMemcpyHostToDevice));
 			
-			gpuErrchk(cudaMemcpy((void*)tasks2->Data(), hostTasks, 2 * sizeof(int), cudaMemcpyHostToDevice));
+			gpuErrchk(cudaMemcpy((void*)tasks2->Data(), hostTasks.data(), hostTasks.size()* 2 * sizeof(int), cudaMemcpyHostToDevice));
 			
 			if(TrackIndex && idTracker !=nullptr)
 				gpuErrchk(cudaMemcpy((void*)idData->Data(), indicesToTrack->data(), indicesToTrack->size() * sizeof(int), cudaMemcpyHostToDevice));
@@ -152,12 +216,65 @@ namespace Quick
 		double Sync()
 		{
 			gpuErrchk(cudaStreamSynchronize(stream0));
-			
-			
+			/*
+			   o o o o o o o o
+			   0 1 2 3
+
+			   i= 0
+			   0 1 2 3 ==> 0 3
+			   i= 1
+			   4 5 6 7 ==> 4 7
+
+
+			   i=0
+			   0 3 4 7 ==> 0 7
+
+			   i=0
+			  
+			*/
+			std::vector<std::vector<int>> mrg = { 
+				// 8 chunks --> 4 chunks
+				{ 0,1,2,3,chunkSize },{4,5,6,7,chunkSize},{8,9,10,11,chunkSize},{12,13,14,15,chunkSize},
+
+				// 4 chunks --> 2 chunks
+				{0,3,4,7,chunkSize*2},{8,11,12,15,chunkSize * 2},
+
+				// 2 chunks --> 1 chunk
+				{0,7,8,15,chunkSize * 4}			
+			};
+
+			/* merge start */
+			if (merge)
+			{
+				auto mergeTasks = hostTasks;
+				
+					for(auto mr:mrg)
+					{
+
+						mergeTasks[0] = hostTasks[mr[0]];
+						mergeTasks[1] = hostTasks[mr[1]];
+						mergeTasks[2] = hostTasks[mr[2]];
+						mergeTasks[3] = hostTasks[mr[3]];
+
+						gpuErrchk(cudaMemcpy((void*)tasks2->Data(), (mergeTasks.data()), 4 * sizeof(int), cudaMemcpyHostToDevice));
+						mergeSortedChunks << <1 + (mr[4] / 1024), 1024 >> > (TrackIndex, tasks2->Data(), data->Data(), dataTmp->Data(), idData->Data(), idDataTmp->Data());
+						copyMergedChunkBack << <1 + ((mr[4] * 2) / 1024), 1024 >> > (TrackIndex, tasks2->Data(), data->Data(), dataTmp->Data(), idData->Data(), idDataTmp->Data());
+						gpuErrchk(cudaStreamSynchronize(stream0));
+					}
+				
+
+
+			}
+			/* merge stop */
+
+
 			gpuErrchk(cudaMemcpy(toSort->data(), (void*)data->Data(), toSort->size() * sizeof(Type), cudaMemcpyDeviceToHost));
-			
+
 			if (TrackIndex && idTracker != nullptr)
 				gpuErrchk(cudaMemcpy(idTracker->data(), (void*)idData->Data(), idTracker->size() * sizeof(int), cudaMemcpyDeviceToHost));
+
+		
+
 			t2 = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
 			toSort = nullptr;
 			idTracker = nullptr;

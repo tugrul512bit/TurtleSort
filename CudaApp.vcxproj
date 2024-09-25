@@ -120,7 +120,21 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies);cudart.lib;cudadevrt.lib;cuda.lib</AdditionalDependencies>
     </Link>
+    <CudaCompile>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+      <CodeGeneration>compute_89,sm_89</CodeGeneration>
+      <GenerateLineInfo>true</GenerateLineInfo>
+      <MaxRegCount>
+      </MaxRegCount>
+    </CudaCompile>
+    <CudaLink>
+      <AdditionalLibraryDirectories>$(CudaToolkitBinDir)/crt;$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
+    </CudaLink>
+    <CudaLink>
+      <AdditionalDependencies>cuda.lib</AdditionalDependencies>
+    </CudaLink>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
