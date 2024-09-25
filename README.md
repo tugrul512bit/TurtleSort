@@ -99,102 +99,8 @@ Asynchronous computing...
 // test program
 int main()
 {
-    if (false)
-    {
-
-        std::vector<int> A = { 7,8,9 };
-        std::vector<int> B = { 2,2,3,3,4,4,100,200 };
-        const int lenA = A.size();
-        const int lenB = B.size();
-        const int lenC = lenA + lenB;
-        std::vector<int> C(lenC);
-        for (int i = 0; i < lenC; i++)C[i] = -1;
-        std::vector<int> scatterC(lenC);
-
-        int numOp = 0;
-        for (int i = 0; i < lenB; i++)
-        {
-            int val = B[i];
-            int l = 0;
-            int r = lenA - 1;
-            int m = (r - l) / 2 + l;
-            bool dir = false;
-
-            while (r >= l)
-            {
-
-                // if bigger, go right
-                if (!(val < A[m]))
-                {
-                    l = m + 1;
-                    dir = true;
-                }
-                else
-                {
-                    r = m - 1;
-                    dir = false;
-                }
-                m = (r - l) / 2 + l;
-
-                if (i == 0)
-                    std::cout << m << std::endl;
-
-                numOp++;
-            }
-
-
-            C[m + i] = val;
-
-        }
-
-
-        for (int i = 0; i < lenA; i++)
-        {
-            int val = A[i];
-            int l = 0;
-            int r = lenB - 1;
-            int m = (r - l) / 2 + l;
-            bool dir = false;
-
-            while (r >= l)
-            {
-
-                // if bigger, go right
-                if (val > B[m])
-                {
-                    l = m + 1;
-                    dir = true;
-                }
-                else
-                {
-                    r = m - 1;
-                    dir = false;
-                }
-                m = (r - l) / 2 + l;
-
-                if (i == 0)
-                    std::cout << m << std::endl;
-
-                numOp++;
-            }
-
-
-            C[m + i] = val;
-
-        }
-
-
-
-
-        for (int i = 0; i < lenC; i++)
-            std::cout << C[i] << " ";
-        std::cout << std::endl;
-        std::wcout << "op=" << numOp << std::endl;
-        return 0;
-    }
-
-
-    using Type = long;
+ 
+    using Type = int;
     constexpr int n = 1024*1024*4;
 
 
@@ -203,7 +109,7 @@ int main()
     bool compress = true;
 
     Quick::FastestQuicksort<Type> sortVal(n, compress);
-    std::vector<Type> sample = { 5,4,3,9,8,7 };
+    std::vector<Type> sample = { 5,4,3,9,8,1 };
     sortVal.StartSorting(&sample);
     sortVal.Sync();
     for (auto& e : sample)
