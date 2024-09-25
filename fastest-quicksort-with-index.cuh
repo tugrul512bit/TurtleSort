@@ -145,13 +145,14 @@ namespace Quick
 			idTracker = indicesToTrack;
 
 			nChunks = 8;
-			chunkSize = toSort->size() / 8;
+			chunkSize =(int)( toSort->size() / 7.5); // makes 8 chunks out of all array lengths
+
 			int curOfs = 0;
 			int numTasksHost[4] = { 1,0,1,0 };
 
 			hostTasks.clear();
 			const int sz = toSort->size();
-			if (chunkSize>1)
+			if (chunkSize>1024)
 			{
 				merge = true;
 				while (curOfs < sz)
