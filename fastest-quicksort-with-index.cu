@@ -308,6 +308,8 @@ namespace Quick
         if (id < sizeChunk1 + sizeChunk2)
         {
             arr[startChunk1+id] = arrTmp[startChunk1+id];
+            if(trackIdValues)
+                idArr[startChunk1 + id] = idArrTmp[startChunk1 + id];
         }
     }
 

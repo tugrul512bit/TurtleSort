@@ -192,7 +192,7 @@ int main()
                 break;
             }
 
-        if(false)
+       
         for (int i = 0; i < n; i++)
         {
             if (hostData[i] != hostIndex[i])
