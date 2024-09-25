@@ -37,7 +37,7 @@ namespace Quick
 			Type* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 
 		template<typename Type>
-		__global__ void copyMergedChunkBack(const bool trackIdValues, int* __restrict__ tasks, Type* __restrict__ arr,
+		__global__ void copyMergedChunkBack(const bool trackIdValues, const int n, Type* __restrict__ arr,
 			Type* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 		
 
@@ -145,34 +145,27 @@ namespace Quick
 			idTracker = indicesToTrack;
 
 			nChunks = 8;
-			chunkSize =(int)( toSort->size() / 7.5); // makes 8 chunks out of all array lengths
+
+
 
 			int curOfs = 0;
 			int numTasksHost[4] = { 1,0,1,0 };
 
 			hostTasks.clear();
 			const int sz = toSort->size();
+			chunkSize = sz / nChunks; // only for making  number of threads exceed number of items
 			if (chunkSize>1024)
 			{
 				merge = true;
-				while (curOfs < sz)
+			
+				hostTasks.push_back(0);
+				for (int i = 0; i < nChunks-1; i++)
 				{
-					if (curOfs < sz-1)
-						hostTasks.push_back(curOfs);
-					else
-						break;
-
-
-					if (curOfs + chunkSize - 1 < sz)
-						hostTasks.push_back(curOfs + chunkSize - 1);
-					else
-						hostTasks.push_back(sz - 1);
-						
-					const int curChunkSize = 1 + hostTasks[hostTasks.size() - 1] - hostTasks[hostTasks.size() - 2];
-
-					//nChunks++;
-					curOfs += curChunkSize;
+					hostTasks.push_back(i* chunkSize + chunkSize -1);
+					hostTasks.push_back(i * chunkSize + chunkSize);
 				}
+				hostTasks.push_back(sz-1); // task borders are inclusive
+
 				numTasksHost[0] = nChunks;
 				numTasksHost[1] = 0;
 				numTasksHost[2] = nChunks;
@@ -190,12 +183,7 @@ namespace Quick
 			}
 			
 	
-			if (hostTasks.size() % 2 != 0)
-			{
-				std::cout << "ERROR: task scheduling error!" << std::endl;
-
-				return;
-			}
+			
 			gpuErrchk(cudaMemcpy((void*)data->Data(), toSort->data(), toSort->size() * sizeof(Type), cudaMemcpyHostToDevice));
 			
 			gpuErrchk(cudaMemcpy((void*)numTasks->Data(), numTasksHost, 4 * sizeof(int), cudaMemcpyHostToDevice));
@@ -217,54 +205,58 @@ namespace Quick
 		double Sync()
 		{
 			gpuErrchk(cudaStreamSynchronize(stream0));
-			/*
-			   o o o o o o o o
-			   0 1 2 3
 
-			   i= 0
-			   0 1 2 3 ==> 0 3
-			   i= 1
-			   4 5 6 7 ==> 4 7
-
-
-			   i=0
-			   0 3 4 7 ==> 0 7
-
-			   i=0
-			  
-			*/
-			std::vector<std::vector<int>> mrg = { 
-				// 8 chunks --> 4 chunks
-				{ 0,1,2,3,chunkSize },{4,5,6,7,chunkSize},{8,9,10,11,chunkSize},{12,13,14,15,chunkSize},
+			std::vector<std::vector<int>> mrg = { 				
+				
+				{0,1,2,3,chunkSize,1},{4,5,6,7,chunkSize ,1},{8,9,10,11,chunkSize ,1},{12,13,14,15,chunkSize ,1},
 
 				// 4 chunks --> 2 chunks
-				{0,3,4,7,chunkSize*2},{8,11,12,15,chunkSize * 2},
+				{0,3,4,7,chunkSize*2,0},{8,11,12,15,chunkSize*2,0},
 
 				// 2 chunks --> 1 chunk
-				{0,7,8,15,chunkSize * 4}			
+				{0,7,8,15,chunkSize*4,1},
 			};
 
 			/* merge start */
 			if (merge)
 			{
 				auto mergeTasks = hostTasks;
-				
+				int ctr = 0;
+				bool lastDir = true;
 					for(auto mr:mrg)
 					{
-
 						mergeTasks[0] = hostTasks[mr[0]];
 						mergeTasks[1] = hostTasks[mr[1]];
 						mergeTasks[2] = hostTasks[mr[2]];
 						mergeTasks[3] = hostTasks[mr[3]];
-
+						bool dir = mr[5];
+						if ((lastDir != dir))
+						{
+							if(!dir)
+								copyMergedChunkBack <<<1 + (toSort->size() / 1024), 1024 >>> (TrackIndex, toSort->size(), data->Data(), dataTmp->Data(), idData->Data(), idDataTmp->Data());
+							else
+								copyMergedChunkBack << <1 + (toSort->size() / 1024), 1024 >> > (TrackIndex, toSort->size(), dataTmp->Data(), data->Data(), idDataTmp->Data(), idData->Data());
+						}
 						gpuErrchk(cudaMemcpy((void*)tasks2->Data(), (mergeTasks.data()), 4 * sizeof(int), cudaMemcpyHostToDevice));
-						mergeSortedChunks << <1 + (mr[4] / 1024), 1024 >> > (TrackIndex, tasks2->Data(), data->Data(), dataTmp->Data(), idData->Data(), idDataTmp->Data());
-						copyMergedChunkBack << <1 + ((mr[4] * 2) / 1024), 1024 >> > (TrackIndex, tasks2->Data(), data->Data(), dataTmp->Data(), idData->Data(), idDataTmp->Data());
+						if (dir)
+						{
+							mergeSortedChunks << <1 + ((mr[4]*1.1) / 1024), 1024 >> > (TrackIndex, tasks2->Data(), data->Data(), dataTmp->Data(), idData->Data(), idDataTmp->Data());							
+						}
+						else
+						{
+							mergeSortedChunks << <1 + ((mr[4] * 1.1) / 1024), 1024 >> > (TrackIndex, tasks2->Data(), dataTmp->Data(), data->Data(), idDataTmp->Data(), idData->Data());
+						}
+
+						
 						gpuErrchk(cudaStreamSynchronize(stream0));
+						lastDir = dir;
 					}
 				
-
-
+					if (lastDir)
+					{
+						copyMergedChunkBack << <1 + (toSort->size() / 1024), 1024 >> > (TrackIndex, toSort->size(), data->Data(), dataTmp->Data(), idData->Data(), idDataTmp->Data());
+						gpuErrchk(cudaStreamSynchronize(stream0));
+					}
 			}
 			/* merge stop */
 

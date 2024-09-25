@@ -287,29 +287,18 @@ namespace Quick
     template<typename Type>
     __global__ void copyMergedChunkBack(
         const bool trackIdValues,
-        int* __restrict__ tasks,
+        const int n,
         Type* __restrict__ arr, Type* __restrict__ arrTmp,
         int* __restrict__ idArr, int* __restrict__ idArrTmp
     )
     {
         const int id = threadIdx.x + blockIdx.x * blockDim.x;
 
-
-
-        // inclusive values
-        const int startChunk1 = tasks[0];
-        const int stopChunk1 = tasks[1];
-        const int startChunk2 = tasks[2];
-        const int stopChunk2 = tasks[3];
-
-        const int sizeChunk1 = stopChunk1 - startChunk1 + 1;
-        const int sizeChunk2 = stopChunk2 - startChunk2 + 1;
-
-        if (id < sizeChunk1 + sizeChunk2)
+        if (id < n)
         {
-            arr[startChunk1+id] = arrTmp[startChunk1+id];
+            arr[id] = arrTmp[id];
             if(trackIdValues)
-                idArr[startChunk1 + id] = idArrTmp[startChunk1 + id];
+                idArr[id] = idArrTmp[id];
         }
     }
 
@@ -993,7 +982,7 @@ namespace Quick
 
     template
         __global__ void copyMergedChunkBack(
-            const bool trackIdValues, int* __restrict__ tasks, int* __restrict__ arr,
+            const bool trackIdValues, const int n, int* __restrict__ arr,
             int* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
     
 
@@ -1015,7 +1004,7 @@ namespace Quick
 
     template
         __global__ void copyMergedChunkBack(
-            const bool trackIdValues, int* __restrict__ tasks, short* __restrict__ arr,
+            const bool trackIdValues, const int n, short* __restrict__ arr,
             short* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 
 
@@ -1038,7 +1027,7 @@ namespace Quick
 
     template
         __global__ void copyMergedChunkBack(
-            const bool trackIdValues, int* __restrict__ tasks, char* __restrict__ arr,
+            const bool trackIdValues, const int n, char* __restrict__ arr,
             char* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 
 
@@ -1059,7 +1048,7 @@ namespace Quick
 
     template
         __global__ void copyMergedChunkBack(
-            const bool trackIdValues, int* __restrict__ tasks, long* __restrict__ arr,
+            const bool trackIdValues, const int n, long* __restrict__ arr,
             long* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 
 
@@ -1085,7 +1074,7 @@ namespace Quick
 
     template
         __global__ void copyMergedChunkBack(
-            const bool trackIdValues, int* __restrict__ tasks, unsigned int* __restrict__ arr,
+            const bool trackIdValues, const int n, unsigned int* __restrict__ arr,
             unsigned int* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 
 
@@ -1109,7 +1098,7 @@ namespace Quick
 
     template
         __global__ void copyMergedChunkBack(
-            const bool trackIdValues, int* __restrict__ tasks, unsigned short* __restrict__ arr,
+            const bool trackIdValues, const int n, unsigned short* __restrict__ arr,
             unsigned short* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 
 
@@ -1129,7 +1118,7 @@ namespace Quick
 
     template
         __global__ void copyMergedChunkBack(
-            const bool trackIdValues, int* __restrict__ tasks, unsigned char* __restrict__ arr,
+            const bool trackIdValues, const int n, unsigned char* __restrict__ arr,
             unsigned char* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 
 
@@ -1153,7 +1142,7 @@ namespace Quick
 
     template
         __global__ void copyMergedChunkBack(
-            const bool trackIdValues, int* __restrict__ tasks, unsigned long* __restrict__ arr,
+            const bool trackIdValues, const int n, unsigned long* __restrict__ arr,
             unsigned long* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 
 
@@ -1174,7 +1163,7 @@ namespace Quick
 
     template
         __global__ void copyMergedChunkBack(
-            const bool trackIdValues, int* __restrict__ tasks, float* __restrict__ arr,
+            const bool trackIdValues, const int n, float* __restrict__ arr,
             float* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 
     // double data
@@ -1194,7 +1183,7 @@ namespace Quick
 
     template
         __global__ void copyMergedChunkBack(
-            const bool trackIdValues, int* __restrict__ tasks, double* __restrict__ arr,
+            const bool trackIdValues, const int n, double* __restrict__ arr,
             double* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 
 

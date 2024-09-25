@@ -7,13 +7,13 @@ int main()
 {
 
 
-    using Type = char;
+    using Type = int;
     const int n = 12000000;
 
 
     // n: number of elements supported for sorting
     // compress: (if possible) enables nvidia's compressible memory to possibly increase effective bandwidth/cache capacity
-    bool compress = true;
+    bool compress = false;
 
     Quick::FastestQuicksort<Type> sortVal(n, compress);
     std::vector<Type> sample = { 5,4,3,9,8,1 };
@@ -45,7 +45,7 @@ int main()
         std::cout << "-------------------------" << std::endl;
         for (int i = 0; i < n; i++)
         {
-            hostData[i] = rand()*3.14f;
+            hostData[i] = rand();
             hostIndex[i] = hostData[i];
             backup[i].data = hostData[i];
             backup2[i].data = hostData[i];
@@ -55,10 +55,14 @@ int main()
             backup3[i].index = hostData[i];
         }
 
-        size_t t1, t2, t3,t4;
+        size_t t1, t2, t3, t4;
         {
             Quick::Bench bench(&t1);
-            sort.StartSorting(&hostData, &hostIndex);
+            // works as struct of arrays rather than array of structs and expects id as a different array
+            sort.StartSorting(&hostData /*, &hostIndex when an object's id needs to be tracked */);
+
+            /* cpu does async work here */
+
             double t = sort.Sync();
 
         }
@@ -93,9 +97,9 @@ int main()
             Quick::Bench bench(&t4);
             std::sort(std::execution::par_unseq, backup3.begin(), backup3.end(), [](auto& e1, auto& e2) { return e1.data < e2.data; });
         }
-        std::cout << "gpu: " << t1 / 1000000000.0 << 
-            "   std::qsort:" << t2 / 1000000000.0 << 
-            "   std::sort:" << t3 / 1000000000.0 << 
+        std::cout << "gpu: " << t1 / 1000000000.0 <<
+            "   std::qsort:" << t2 / 1000000000.0 <<
+            "   std::sort:" << t3 / 1000000000.0 <<
             "   std::sort(par_unseq):" << t4 / 1000000000.0 <<
             std::endl;
         bool err = false, err2 = false;
@@ -104,23 +108,13 @@ int main()
         for (int i = 0; i < n - 1; i++)
             if (hostData[i] > hostData[i + 1])
             {
-                std::cout << "error at: " << i << ": " << hostData[i] << " " << hostData[i + 1]  << std::endl;
+                std::cout << "error at: " << i << ": " << hostData[i] << " " << hostData[i + 1] << " " << hostData[i + 2] << std::endl;
                 err = true;
                 j = 1000000;
                 return 1;
             }
 
-        for (int i = 0; i < n; i++)
-        {
-            if ((hostData[i] < hostIndex[i]) || (hostData[i] > hostIndex[i]))
-            {
-                err2 = true;
-                j = 1000000;
-                std::cout << "error: index calculation wrong" << std::endl;
-                std::cout << hostData[i] << " " << hostIndex[i] << std::endl;
-                return 1;
-            }
-        }
+
         if (!err && !err2)
         {
             std::cout << "quicksort (" << n << " elements) completed successfully " << std::endl;
