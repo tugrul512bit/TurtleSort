@@ -209,6 +209,39 @@ int main()
 }
 ```
 
+output on ryzen7900 and rtx4090:
+
+```
+gpu: 0.036844   std::qsort:0.775426   std::sort:0.430385   std::sort(par_unseq):0.0875657
+quicksort (12582912 elements) completed successfully
+-------------------------
+gpu: 0.0334487   std::qsort:0.766197   std::sort:0.429026   std::sort(par_unseq):0.0793185
+quicksort (12582912 elements) completed successfully
+-------------------------
+gpu: 0.0331019   std::qsort:0.777763   std::sort:0.430848   std::sort(par_unseq):0.0780624
+quicksort (12582912 elements) completed successfully
+-------------------------
+gpu: 0.0329223   std::qsort:0.77231   std::sort:0.424476   std::sort(par_unseq):0.0859999
+quicksort (12582912 elements) completed successfully
+-------------------------
+gpu: 0.0323176   std::qsort:0.765149   std::sort:0.431423   std::sort(par_unseq):0.0798207
+quicksort (12582912 elements) completed successfully
+-------------------------
+gpu: 0.148611   std::qsort:0.770223   std::sort:0.43458   std::sort(par_unseq):0.0772376
+quicksort (12582912 elements) completed successfully
+-------------------------
+gpu: 0.162047   std::qsort:0.770022   std::sort:0.427861   std::sort(par_unseq):0.0829041
+quicksort (12582912 elements) completed successfully
+-------------------------
+gpu: 0.0333234   std::qsort:0.770051   std::sort:0.431438   std::sort(par_unseq):0.0776
+quicksort (12582912 elements) completed successfully
+-------------------------
+gpu: 0.151563   std::qsort:0.777049   std::sort:0.43123   std::sort(par_unseq):0.0909237
+quicksort (12582912 elements) completed successfully
+-------------------------
+gpu: 0.0327161   std::qsort:0.771654   std::sort:0.43577   std::sort(par_unseq):0.0918065
+quicksort (12582912 elements) completed successfully
+```
 
 15x std::sort performance, 2.3x against 24-thread std::sort(std::execution::par_unseq)!
 
