@@ -1,4 +1,4 @@
-# Fastest Quicksort
+# TurtleSort
 
 Quicksort algorithm boosted with optional paths for different sized data chunks with different sorting algorithms while keeping the "quick" part as main coordinator. Uses CUDA for accelerating parallel algorithms such as reductions, counting and others.
 
@@ -43,24 +43,25 @@ Compiler options:
 # Sample Code
 
 ```C++
-#include"fastest-quicksort-with-index.cuh"
-#include<vector>
+#include"turtle-sort.cuh" 
 
 // test program
 int main()
 {
-    using Type = unsigned long;
-    constexpr int n = 1024 * 1024;
+    using Type = int;
 
-    // this can sort any length of arrays up to n
-    Quick::FastestQuicksort<Type> sort(n);
-    std::vector<Type> test = { 5,3,7,3,1 };
-    sort.StartSorting(&test);
-    std::cout << "Asynchronous computing..." << std::endl;
-    sort.Sync();
-    for (auto e : test)
+    // maximum array length to sort
+    const int n = 1000;
+    Turtle::TurtleSort<Type> sortVal(n);
+    std::vector<Type> sample = { 5,4,3,9,8,1 };
+    sortVal.StartSorting(&sample);
+
+
+    sortVal.Sync();
+    for (auto& e : sample)
         std::cout << e << " ";
     std::cout << std::endl;
+
     return 0;
 }
 ```
@@ -74,7 +75,7 @@ Asynchronous computing...
 # Sample Benchmark Code
 
 ```C++
-#include"fastest-quicksort-with-index.cuh" 
+#include"turtle-sort.cuh" 
 #include <execution>
 #include<algorithm>
 
@@ -84,14 +85,14 @@ int main()
 
 
     using Type = int;
-    const int n = 12000000;
+    const int n = 12*1024*1024;
 
 
     // n: number of elements supported for sorting
     // compress: (if possible) enables nvidia's compressible memory to possibly increase effective bandwidth/cache capacity
     bool compress = true;
 
-    Quick::FastestQuicksort<Type> sortVal(n, compress);
+    Turtle::TurtleSort<Type> sortVal(n, compress);
     std::vector<Type> sample = { 5,4,3,9,8,1 };
     sortVal.StartSorting(&sample);
     sortVal.Sync();
@@ -102,7 +103,7 @@ int main()
 
 
     // compression disabled by default
-    Quick::FastestQuicksort<Type> sort(n, compress);
+    Turtle::TurtleSort<Type> sort(n, compress);
     std::cout << "Check GPU boost frequency if performance drops." << std::endl;
 
     // sample
@@ -131,9 +132,9 @@ int main()
             backup3[i].index = hostData[i];
         }
 
-        size_t t1, t2, t3,t4;
+        size_t t1, t2, t3, t4;
         {
-            Quick::Bench bench(&t1);
+            Turtle::Bench bench(&t1);
             sort.StartSorting(&hostData, &hostIndex);
             double t = sort.Sync();
 
@@ -141,7 +142,7 @@ int main()
 
 
         {
-            Quick::Bench bench(&t2);
+            Turtle::Bench bench(&t2);
             std::qsort
             (
                 backup.data(),
@@ -162,16 +163,16 @@ int main()
         }
 
         {
-            Quick::Bench bench(&t3);
+            Turtle::Bench bench(&t3);
             std::sort(backup2.begin(), backup2.end(), [](auto& e1, auto& e2) { return e1.data < e2.data; });
         }
         {
-            Quick::Bench bench(&t4);
+            Turtle::Bench bench(&t4);
             std::sort(std::execution::par_unseq, backup3.begin(), backup3.end(), [](auto& e1, auto& e2) { return e1.data < e2.data; });
         }
-        std::cout << "gpu: " << t1 / 1000000000.0 << 
-            "   std::qsort:" << t2 / 1000000000.0 << 
-            "   std::sort:" << t3 / 1000000000.0 << 
+        std::cout << "gpu: " << t1 / 1000000000.0 <<
+            "   std::qsort:" << t2 / 1000000000.0 <<
+            "   std::sort:" << t3 / 1000000000.0 <<
             "   std::sort(par_unseq):" << t4 / 1000000000.0 <<
             std::endl;
         bool err = false, err2 = false;
@@ -208,27 +209,39 @@ int main()
 }
 ```
 
+output on ryzen7900 and rtx4090:
 
-Benchmark output with index-tracking:
 ```
+gpu: 0.036844   std::qsort:0.775426   std::sort:0.430385   std::sort(par_unseq):0.0875657
+quicksort (12582912 elements) completed successfully
 -------------------------
-gpu: 0.0330629   std::qsort:0.776219   std::sort:0.408682   std::sort(par_unseq):0.0853103
-quicksort (12000000 elements) completed successfully
+gpu: 0.0334487   std::qsort:0.766197   std::sort:0.429026   std::sort(par_unseq):0.0793185
+quicksort (12582912 elements) completed successfully
 -------------------------
-gpu: 0.0321942   std::qsort:0.749791   std::sort:0.410876   std::sort(par_unseq):0.0782492
-quicksort (12000000 elements) completed successfully
+gpu: 0.0331019   std::qsort:0.777763   std::sort:0.430848   std::sort(par_unseq):0.0780624
+quicksort (12582912 elements) completed successfully
 -------------------------
-gpu: 0.0325952   std::qsort:0.75257   std::sort:0.411162   std::sort(par_unseq):0.076477
-quicksort (12000000 elements) completed successfully
+gpu: 0.0329223   std::qsort:0.77231   std::sort:0.424476   std::sort(par_unseq):0.0859999
+quicksort (12582912 elements) completed successfully
 -------------------------
-gpu: 0.0338285   std::qsort:0.74212   std::sort:0.408809   std::sort(par_unseq):0.0750282
-quicksort (12000000 elements) completed successfully
+gpu: 0.0323176   std::qsort:0.765149   std::sort:0.431423   std::sort(par_unseq):0.0798207
+quicksort (12582912 elements) completed successfully
 -------------------------
-gpu: 0.0322718   std::qsort:0.74489   std::sort:0.412023   std::sort(par_unseq):0.0766427
-quicksort (12000000 elements) completed successfully
+gpu: 0.148611   std::qsort:0.770223   std::sort:0.43458   std::sort(par_unseq):0.0772376
+quicksort (12582912 elements) completed successfully
 -------------------------
+gpu: 0.162047   std::qsort:0.770022   std::sort:0.427861   std::sort(par_unseq):0.0829041
+quicksort (12582912 elements) completed successfully
+-------------------------
+gpu: 0.0333234   std::qsort:0.770051   std::sort:0.431438   std::sort(par_unseq):0.0776
+quicksort (12582912 elements) completed successfully
+-------------------------
+gpu: 0.151563   std::qsort:0.777049   std::sort:0.43123   std::sort(par_unseq):0.0909237
+quicksort (12582912 elements) completed successfully
+-------------------------
+gpu: 0.0327161   std::qsort:0.771654   std::sort:0.43577   std::sort(par_unseq):0.0918065
+quicksort (12582912 elements) completed successfully
 ```
-
 
 15x std::sort performance, 2.3x against 24-thread std::sort(std::execution::par_unseq)!
 
