@@ -8,7 +8,7 @@ int main()
 
 
     using Type = int;
-    const int n = 12*1024*1024;
+    const int n = 1024 * 1024*64;
 
 
     // n: number of elements supported for sorting
