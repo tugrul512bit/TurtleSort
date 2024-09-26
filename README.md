@@ -228,16 +228,16 @@ quicksort (12582912 elements) completed successfully
 gpu: 0.0323176   std::qsort:0.765149   std::sort:0.431423   std::sort(par_unseq):0.0798207
 quicksort (12582912 elements) completed successfully
 -------------------------
-gpu: 0.148611   std::qsort:0.770223   std::sort:0.43458   std::sort(par_unseq):0.0772376
+gpu: 0.148611 <---- GPU boost is disabled by driver due to staying idle (waiting for other sorters)
 quicksort (12582912 elements) completed successfully
 -------------------------
-gpu: 0.162047   std::qsort:0.770022   std::sort:0.427861   std::sort(par_unseq):0.0829041
+gpu: 0.162047   <---- GPU boost is disabled by driver due to staying idle (waiting for other sorters)
 quicksort (12582912 elements) completed successfully
 -------------------------
 gpu: 0.0333234   std::qsort:0.770051   std::sort:0.431438   std::sort(par_unseq):0.0776
 quicksort (12582912 elements) completed successfully
 -------------------------
-gpu: 0.151563   std::qsort:0.777049   std::sort:0.43123   std::sort(par_unseq):0.0909237
+gpu: 0.151563    <---- GPU boost is disabled by driver due to staying idle (waiting for other sorters)
 quicksort (12582912 elements) completed successfully
 -------------------------
 gpu: 0.0327161   std::qsort:0.771654   std::sort:0.43577   std::sort(par_unseq):0.0918065
