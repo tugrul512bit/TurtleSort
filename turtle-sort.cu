@@ -1,5 +1,5 @@
 
-#include"fastest-quicksort-with-index.cuh"
+#include"turtle-sort.cuh"
 
 namespace Quick
 {
@@ -123,7 +123,7 @@ namespace Quick
         int* __restrict__ idArr,
         Type* __restrict__ arrTmp, int* __restrict__ idArrTmp)
     {
-
+       
         const int id = threadIdx.x;
         const int gid = blockIdx.x;
 
@@ -621,7 +621,7 @@ namespace Quick
 
         if (num <= DIRECTLY_COMPUTE_LIMIT && bd >= DIRECTLY_COMPUTE_LIMIT)
         {
-         
+        
             if(num<=4)
                 sortByNetwork<5, 2, 3, Type>(sortingNetwork4, snCols4, arr, idArr, cacheData, cacheId, id, startIncluded, trackIdValues, num);
             else if(num<=8)
@@ -864,9 +864,10 @@ namespace Quick
 
             if (nLeftLeft > 1)
             {
-
+               
                 if (nLeftLeft <= BRUTE_FORCE_LIMIT && nLeftLeft > DIRECTLY_COMPUTE_LIMIT) // push new "brute-force" task
                 {
+                    
                     const int index = atomicAdd(&numTasks[1], 1);
                     tasks4[index * 2] = startIncluded;
                     tasks4[index * 2 + 1] = startIncluded + nLeftLeft - 1;
@@ -884,6 +885,7 @@ namespace Quick
 
                 if (nLeft <= BRUTE_FORCE_LIMIT && nLeft > DIRECTLY_COMPUTE_LIMIT) // push new "brute-force" task
                 {
+                    
                     const int index = atomicAdd(&numTasks[1], 1);
                     tasks4[index * 2] = startIncluded + nLeftLeft + nPivotLeft;
                     tasks4[index * 2 + 1] = startIncluded + nLeftLeft + nPivotLeft + nLeft - 1;
@@ -900,7 +902,7 @@ namespace Quick
             {
                 if (nRight <= BRUTE_FORCE_LIMIT && nRight > DIRECTLY_COMPUTE_LIMIT) // push new "brute-force" task
                 {
-
+                    
                     const int index = atomicAdd(&numTasks[1], 1);
                     tasks4[index * 2] = startIncluded + nLeftLeft + nPivotLeft + nLeft + nPivot;
                     tasks4[index * 2 + 1] = startIncluded + nLeftLeft + nPivotLeft + nLeft + nPivot + nRight - 1;
@@ -918,7 +920,7 @@ namespace Quick
             {
                 if (nRightRight <= BRUTE_FORCE_LIMIT && nRightRight > DIRECTLY_COMPUTE_LIMIT) // push new "brute-force" task
                 {
-
+                  
                     const int index = atomicAdd(&numTasks[1], 1);
                     tasks4[index * 2] = startIncluded + nLeftLeft + nPivotLeft + nLeft + nPivot + nRight + nPivotRight;
                     tasks4[index * 2 + 1] = stopIncluded;

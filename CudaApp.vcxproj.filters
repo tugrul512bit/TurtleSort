@@ -15,8 +15,8 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="fastest-quicksort-with-index.cu" />
-    <CudaCompile Include="fastest-quicksort-with-index.cuh" />
+    <CudaCompile Include="turtle-sort.cu" />
+    <CudaCompile Include="turtle-sort.cuh" />
     <CudaCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </CudaCompile>
@@ -26,6 +26,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quick-helper.cuh" />
-    <ClInclude Include="quick-buffer.cuh" />
+    <ClInclude Include="turtle-buffer.cuh" />
   </ItemGroup>
 </Project>

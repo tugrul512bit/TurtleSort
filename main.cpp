@@ -1,4 +1,4 @@
-#include"fastest-quicksort-with-index.cuh" 
+#include"turtle-sort.cuh" 
 #include <execution>
 #include<algorithm>
 
@@ -8,14 +8,14 @@ int main()
 
 
     using Type = int;
-    const int n = 12000000;
+    const int n = 12*1024*1024;
 
 
     // n: number of elements supported for sorting
     // compress: (if possible) enables nvidia's compressible memory to possibly increase effective bandwidth/cache capacity
-    bool compress = false;
+    bool compress = true;
 
-    Quick::FastestQuicksort<Type> sortVal(n, compress);
+    Quick::TurtleSort<Type> sortVal(n, compress);
     std::vector<Type> sample = { 5,4,3,9,8,1 };
     sortVal.StartSorting(&sample);
     sortVal.Sync();
@@ -26,7 +26,7 @@ int main()
 
 
     // compression disabled by default
-    Quick::FastestQuicksort<Type> sort(n, compress);
+    Quick::TurtleSort<Type> sort(n, compress);
     std::cout << "Check GPU boost frequency if performance drops." << std::endl;
 
     // sample
@@ -58,11 +58,7 @@ int main()
         size_t t1, t2, t3, t4;
         {
             Quick::Bench bench(&t1);
-            // works as struct of arrays rather than array of structs and expects id as a different array
-            sort.StartSorting(&hostData /*, &hostIndex when an object's id needs to be tracked */);
-
-            /* cpu does async work here */
-
+            sort.StartSorting(&hostData, &hostIndex);
             double t = sort.Sync();
 
         }
@@ -115,6 +111,16 @@ int main()
             }
 
 
+        for (int i = 0; i < n; i++)
+        {
+            if (hostData[i] != hostIndex[i])
+            {
+                err2 = true;
+                j = 1000000;
+                std::cout << "error: index calculation wrong" << std::endl;
+                return 1;
+            }
+        }
         if (!err && !err2)
         {
             std::cout << "quicksort (" << n << " elements) completed successfully " << std::endl;

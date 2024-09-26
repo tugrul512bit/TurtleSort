@@ -157,6 +157,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>%(AdditionalDependencies);cudart.lib;cudadevrt.lib;cuda.lib</AdditionalDependencies>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <CudaCompile>
       <ExtensibleWholeProgramCompilation>false</ExtensibleWholeProgramCompilation>
@@ -174,6 +175,7 @@
       <Defines>QUICK_SORT_TEST</Defines>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <PtxAsOptionV>true</PtxAsOptionV>
+      <NvccCompilation>compile</NvccCompilation>
     </CudaCompile>
     <CudaLink>
       <Optimization>O3</Optimization>
@@ -183,10 +185,10 @@
     </CudaLink>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="fastest-quicksort-with-index.cu" />
+    <CudaCompile Include="turtle-sort.cu" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="fastest-quicksort-with-index.cuh" />
+    <CudaCompile Include="turtle-sort.cuh" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="main.cpp" />
@@ -196,7 +198,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quick-helper.cuh" />
-    <ClInclude Include="quick-buffer.cuh" />
+    <ClInclude Include="turtle-buffer.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

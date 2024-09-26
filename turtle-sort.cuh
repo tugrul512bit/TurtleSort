@@ -9,7 +9,7 @@
 #include <device_launch_parameters.h>
 #include <cuda_device_runtime_api.h>
 #include <device_functions.h>
-#include "quick-buffer.cuh"
+#include "turtle-buffer.cuh"
 #include <memory>
 #include <algorithm>
 namespace Quick
@@ -46,7 +46,7 @@ namespace Quick
 		this sorting is asynchronous to CPU
 	*/
 	template<typename Type, bool TrackIndex=true>
-	struct FastestQuicksort
+	struct TurtleSort
 	{
 	private:
 		int deviceId;
@@ -77,7 +77,7 @@ namespace Quick
 		int nChunks;
 		int chunkSize; // not same for the last chunk
 	public:
-		FastestQuicksort(int maxElements, bool optInCompression=false)
+		TurtleSort(int maxElements, bool optInCompression=false)
 		{
 			chunkSize = 1024 * 64;
 			nChunks = 0;
@@ -274,7 +274,7 @@ namespace Quick
 			return (t2.count() - t1.count()) / 1000000000.0;
 		}
 
-		~FastestQuicksort()
+		~TurtleSort()
 		{
 			
 			gpuErrchk(cudaStreamDestroy(stream0));
