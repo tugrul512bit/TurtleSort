@@ -12,7 +12,7 @@
 #include "turtle-buffer.cuh"
 #include <memory>
 #include <algorithm>
-namespace Quick
+namespace Turtle
 {
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 	inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort = true)
@@ -52,17 +52,17 @@ namespace Quick
 		int deviceId;
 		int compressionSupported;
 
-		std::shared_ptr<QuickBuffer::Buffer<Type>> data;
-		std::shared_ptr < QuickBuffer::Buffer<Type>> dataTmp;
+		std::shared_ptr<TurtleBuffer::Buffer<Type>> data;
+		std::shared_ptr < TurtleBuffer::Buffer<Type>> dataTmp;
 
-		std::shared_ptr < QuickBuffer::Buffer<int>> tasks;
-		std::shared_ptr < QuickBuffer::Buffer<int>> tasks2;
-		std::shared_ptr < QuickBuffer::Buffer<int>> tasks3;
-		std::shared_ptr < QuickBuffer::Buffer<int>> tasks4;
+		std::shared_ptr < TurtleBuffer::Buffer<int>> tasks;
+		std::shared_ptr < TurtleBuffer::Buffer<int>> tasks2;
+		std::shared_ptr < TurtleBuffer::Buffer<int>> tasks3;
+		std::shared_ptr < TurtleBuffer::Buffer<int>> tasks4;
 
-		std::shared_ptr < QuickBuffer::Buffer<int>> numTasks;
-		std::shared_ptr < QuickBuffer::Buffer<int>> idData;
-		std::shared_ptr < QuickBuffer::Buffer<int>> idDataTmp;
+		std::shared_ptr < TurtleBuffer::Buffer<int>> numTasks;
+		std::shared_ptr < TurtleBuffer::Buffer<int>> idData;
+		std::shared_ptr < TurtleBuffer::Buffer<int>> idDataTmp;
 		
 		int maxN;
 
@@ -104,18 +104,18 @@ namespace Quick
 				std::cout << "CUDA ERROR: " << pStr << std::endl;
 			}
 			
-			data = std::make_shared<QuickBuffer::Buffer<Type>>("data",maxN, currentDevice, compressionSupported && optInCompression);
-			dataTmp = std::make_shared<QuickBuffer::Buffer<Type>>("dataTmp", maxN, currentDevice, compressionSupported && optInCompression);
-			tasks = std::make_shared<QuickBuffer::Buffer<int>>("tasks", maxN, currentDevice,  compressionSupported && optInCompression);
-			tasks2 = std::make_shared<QuickBuffer::Buffer<int>>("tasks2", maxN, currentDevice,  compressionSupported && optInCompression);
-			tasks3 = std::make_shared<QuickBuffer::Buffer<int>>("tasks3", maxN, currentDevice, compressionSupported && optInCompression);
-			tasks4 = std::make_shared<QuickBuffer::Buffer<int>>("tasks4", maxN, currentDevice, compressionSupported && optInCompression);
-			numTasks = std::make_shared<QuickBuffer::Buffer<int>>("numTasks", 4, currentDevice, false);
+			data = std::make_shared<TurtleBuffer::Buffer<Type>>("data",maxN, currentDevice, compressionSupported && optInCompression);
+			dataTmp = std::make_shared<TurtleBuffer::Buffer<Type>>("dataTmp", maxN, currentDevice, compressionSupported && optInCompression);
+			tasks = std::make_shared<TurtleBuffer::Buffer<int>>("tasks", maxN, currentDevice,  compressionSupported && optInCompression);
+			tasks2 = std::make_shared<TurtleBuffer::Buffer<int>>("tasks2", maxN, currentDevice,  compressionSupported && optInCompression);
+			tasks3 = std::make_shared<TurtleBuffer::Buffer<int>>("tasks3", maxN, currentDevice, compressionSupported && optInCompression);
+			tasks4 = std::make_shared<TurtleBuffer::Buffer<int>>("tasks4", maxN, currentDevice, compressionSupported && optInCompression);
+			numTasks = std::make_shared<TurtleBuffer::Buffer<int>>("numTasks", 4, currentDevice, false);
 		
 			if (TrackIndex)
 			{
-				idData = std::make_shared<QuickBuffer::Buffer<int>>("idData", maxN, currentDevice,  compressionSupported && optInCompression);
-				idDataTmp = std::make_shared<QuickBuffer::Buffer<int>>("idDataTmp", maxN, currentDevice, compressionSupported && optInCompression);
+				idData = std::make_shared<TurtleBuffer::Buffer<int>>("idData", maxN, currentDevice,  compressionSupported && optInCompression);
+				idDataTmp = std::make_shared<TurtleBuffer::Buffer<int>>("idDataTmp", maxN, currentDevice, compressionSupported && optInCompression);
 			}
 
 			gpuErrchk(cudaStreamCreateWithFlags(&stream0, cudaStreamNonBlocking));

@@ -15,7 +15,7 @@ int main()
     // compress: (if possible) enables nvidia's compressible memory to possibly increase effective bandwidth/cache capacity
     bool compress = true;
 
-    Quick::TurtleSort<Type> sortVal(n, compress);
+    Turtle::TurtleSort<Type> sortVal(n, compress);
     std::vector<Type> sample = { 5,4,3,9,8,1 };
     sortVal.StartSorting(&sample);
     sortVal.Sync();
@@ -26,7 +26,7 @@ int main()
 
 
     // compression disabled by default
-    Quick::TurtleSort<Type> sort(n, compress);
+    Turtle::TurtleSort<Type> sort(n, compress);
     std::cout << "Check GPU boost frequency if performance drops." << std::endl;
 
     // sample
@@ -57,7 +57,7 @@ int main()
 
         size_t t1, t2, t3, t4;
         {
-            Quick::Bench bench(&t1);
+            Turtle::Bench bench(&t1);
             sort.StartSorting(&hostData, &hostIndex);
             double t = sort.Sync();
 
@@ -65,7 +65,7 @@ int main()
 
 
         {
-            Quick::Bench bench(&t2);
+            Turtle::Bench bench(&t2);
             std::qsort
             (
                 backup.data(),
@@ -86,11 +86,11 @@ int main()
         }
 
         {
-            Quick::Bench bench(&t3);
+            Turtle::Bench bench(&t3);
             std::sort(backup2.begin(), backup2.end(), [](auto& e1, auto& e2) { return e1.data < e2.data; });
         }
         {
-            Quick::Bench bench(&t4);
+            Turtle::Bench bench(&t4);
             std::sort(std::execution::par_unseq, backup3.begin(), backup3.end(), [](auto& e1, auto& e2) { return e1.data < e2.data; });
         }
         std::cout << "gpu: " << t1 / 1000000000.0 <<

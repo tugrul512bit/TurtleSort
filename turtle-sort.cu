@@ -1,7 +1,7 @@
 
 #include"turtle-sort.cuh"
 
-namespace Quick
+namespace Turtle
 {
     // maximum number of elements going into brute-force chunks
     constexpr int BRUTE_FORCE_LIMIT = 128;
