@@ -28,8 +28,8 @@ int main()
 
 
 
-        sorter.MultiSort<double,arrSize>(numArraysToSort, hostData.data());
-
+        double seconds = sorter.MultiSort<double,arrSize>(numArraysToSort, hostData.data());
+        std::cout << "Sorting " << numArraysToSort << " arrays of " << arrSize << " elements took " << seconds << " seconds" << std::endl;
         for (int i = 0; i < numArraysToSort; i++)
         {
             for (int j = 0; j < arrSize - 1; j++)
