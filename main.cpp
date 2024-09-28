@@ -3,7 +3,7 @@
 // test program
 int main()
 {
-    using Type = double;
+    using Type = int;
 
     constexpr int arrSize = 10;
     std::cout << "test" << std::endl;
@@ -16,7 +16,7 @@ int main()
     Type* data;
     Type* dataInterleaved;
     bool compress = true;
-    Turtle::TurtleSort<double> sorter(n, compress);
+    Turtle::TurtleSort<Type> sorter(n, compress);
     std::vector<Type> hostData(n);
 
     for (int k = 0; k < 10; k++)
@@ -28,7 +28,7 @@ int main()
 
 
 
-        double seconds = sorter.MultiSort<double,arrSize>(numArraysToSort, hostData.data());
+        double seconds = sorter.MultiSort<Type,arrSize>(numArraysToSort, hostData.data());
         std::cout << "Sorting " << numArraysToSort << " arrays of " << arrSize << " elements took " << seconds << " seconds" << std::endl;
         for (int i = 0; i < numArraysToSort; i++)
         {
