@@ -249,3 +249,102 @@ quicksort (12582912 elements) completed successfully
 # CUDA Compressible Memory Test Result
 
 ![because processing a sorted array is faster](https://github.com/tugrul512bit/FastestQuicksort/blob/master/qHu9lk%5B1%5D.jpg)
+
+---
+
+# Multiple Sorting Support
+
+```C++
+#include"turtle-sort.cuh"
+
+// test program
+int main()
+{
+    using Type = double;
+
+    constexpr int arrSize = 49;
+    std::cout << "test" << std::endl;
+
+    // number of cuda threads per block
+    constexpr int blockSize = 32;
+    int numArraysToSort = 100000 * blockSize; // has to be multiple of blockSize
+
+    int n = arrSize * numArraysToSort;
+    Type* data;
+    Type* dataInterleaved;
+    bool compress = true;
+    Turtle::TurtleSort<double> sorter(n, compress);
+    std::vector<Type> hostData(n);
+
+    for (int k = 0; k < 10; k++)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            hostData[i] = rand();
+        }
+
+
+
+        double seconds = sorter.MultiSort<double,arrSize>(numArraysToSort, hostData.data());
+        std::cout << "Sorting " << numArraysToSort << " arrays of " << arrSize << " elements took " << seconds << " seconds" << std::endl;
+        for (int i = 0; i < numArraysToSort; i++)
+        {
+            for (int j = 0; j < arrSize - 1; j++)
+            {
+                if (hostData[i * arrSize + j] > hostData[i * arrSize + j + 1])
+                {
+                    std::cout << "sort failed" << std::endl;
+                    std::cout << "array-id:" << i << std::endl;
+                    std::cout << "element-id:" << j << std::endl;
+                    for (int k = 0; k < arrSize; k++)
+                        std::cout << hostData[i * arrSize + k] << " ";
+                    std::cout << std::endl;
+                    return 0;
+                }
+            }
+        }
+
+
+
+        std::cout << "sort success" << std::endl;
+    }
+    if (CUDA_SUCCESS != cudaFree(data))
+    {
+        std::cout << "failed memory free" << std::endl;
+        return 0;
+    }
+    if (CUDA_SUCCESS != cudaFree(dataInterleaved))
+    {
+        std::cout << "failed memory free" << std::endl;
+        return 0;
+    }
+    return 0;
+
+}
+```
+
+output (copying arrays takes 90% of the total time, its actually 10x faster on gpu-side):
+
+```
+test
+Sorting 3200000 arrays of 49 elements took 0.125938 seconds
+sort success
+Sorting 3200000 arrays of 49 elements took 0.12451 seconds
+sort success
+Sorting 3200000 arrays of 49 elements took 0.124329 seconds
+sort success
+Sorting 3200000 arrays of 49 elements took 0.124176 seconds
+sort success
+Sorting 3200000 arrays of 49 elements took 0.229981 seconds
+sort success
+Sorting 3200000 arrays of 49 elements took 0.124793 seconds
+sort success
+Sorting 3200000 arrays of 49 elements took 0.124168 seconds
+sort success
+Sorting 3200000 arrays of 49 elements took 0.12444 seconds
+sort success
+Sorting 3200000 arrays of 49 elements took 0.123733 seconds
+sort success
+Sorting 3200000 arrays of 49 elements took 0.347791 seconds
+sort success
+```
