@@ -9,12 +9,12 @@ int main()
     std::cout << "test" << std::endl;
 
     // number of cuda threads per block
-    constexpr int blockSize = 32;
+    constexpr int blockSize = 64;
     int numArraysToSort = 100000 * blockSize; // has to be multiple of blockSize
 
     int n = arrSize * numArraysToSort;
 
-    bool compress = true;
+    bool compress = false;
     Turtle::TurtleSort<Type> sorter(n, compress);
     std::vector<Type> hostData(n);
 
@@ -27,7 +27,7 @@ int main()
 
 
 
-        double seconds = sorter.MultiSort<Type,arrSize>(numArraysToSort, hostData.data());
+        double seconds = sorter.MultiSort<Type,arrSize, blockSize>(numArraysToSort, hostData.data());
         std::cout << "Sorting " << numArraysToSort << " arrays of " << arrSize << " elements took " << seconds << " seconds" << std::endl;
         for (int i = 0; i < numArraysToSort; i++)
         {
