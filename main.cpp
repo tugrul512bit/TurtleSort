@@ -13,8 +13,7 @@ int main()
     int numArraysToSort = 100000 * blockSize; // has to be multiple of blockSize
 
     int n = arrSize * numArraysToSort;
-    Type* data;
-    Type* dataInterleaved;
+
     bool compress = true;
     Turtle::TurtleSort<Type> sorter(n, compress);
     std::vector<Type> hostData(n);
@@ -51,16 +50,7 @@ int main()
 
         std::cout << "sort success" << std::endl;
     }
-    if (CUDA_SUCCESS != cudaFree(data))
-    {
-        std::cout << "failed memory free" << std::endl;
-        return 0;
-    }
-    if (CUDA_SUCCESS != cudaFree(dataInterleaved))
-    {
-        std::cout << "failed memory free" << std::endl;
-        return 0;
-    }
+  
     return 0;
 
 }
