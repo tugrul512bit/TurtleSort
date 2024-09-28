@@ -14,8 +14,9 @@ Quicksort algorithm boosted with optional paths for different sized data chunks 
 - Already-sorted arrays are 2x slow compared to random-initialized arrays. Being only 2x slower for 64M suggests that either the constant factor in worst-case O(n^2 x c) is very good or it is not O(n^2) anymore due to said optimizations.
 
 # Performance
-- Up to 25x faster than std::qsort
-- Up to 15x faster than std::sort
+- Up to 25x faster than single-thread std::qsort
+- Up to 15x faster than single-thread std::sort
+- Up to 3x faster than 24-thread std::sort(par_unseq,a,b)
 - Runs faster when array elements have duplicates (but std::sort runs even faster)
 - Same speed with sorted array (but std::sort runs faster so theres only 2x speedup against std::sort)
 
@@ -227,16 +228,16 @@ quicksort (12582912 elements) completed successfully
 gpu: 0.0323176   std::qsort:0.765149   std::sort:0.431423   std::sort(par_unseq):0.0798207
 quicksort (12582912 elements) completed successfully
 -------------------------
-gpu: 0.148611   std::qsort:0.770223   std::sort:0.43458   std::sort(par_unseq):0.0772376
+gpu: 0.148611 <---- GPU boost is disabled by driver due to staying idle (waiting for other sorters)
 quicksort (12582912 elements) completed successfully
 -------------------------
-gpu: 0.162047   std::qsort:0.770022   std::sort:0.427861   std::sort(par_unseq):0.0829041
+gpu: 0.162047   <---- GPU boost is disabled by driver due to staying idle (waiting for other sorters)
 quicksort (12582912 elements) completed successfully
 -------------------------
 gpu: 0.0333234   std::qsort:0.770051   std::sort:0.431438   std::sort(par_unseq):0.0776
 quicksort (12582912 elements) completed successfully
 -------------------------
-gpu: 0.151563   std::qsort:0.777049   std::sort:0.43123   std::sort(par_unseq):0.0909237
+gpu: 0.151563    <---- GPU boost is disabled by driver due to staying idle (waiting for other sorters)
 quicksort (12582912 elements) completed successfully
 -------------------------
 gpu: 0.0327161   std::qsort:0.771654   std::sort:0.43577   std::sort(par_unseq):0.0918065
