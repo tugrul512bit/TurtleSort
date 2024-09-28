@@ -266,12 +266,12 @@ int main()
     std::cout << "test" << std::endl;
 
     // number of cuda threads per block
-    constexpr int blockSize = 32;
+    constexpr int blockSize = 64;
     int numArraysToSort = 100000 * blockSize; // has to be multiple of blockSize
 
     int n = arrSize * numArraysToSort;
 
-    bool compress = true;
+    bool compress = false;
     Turtle::TurtleSort<Type> sorter(n, compress);
     std::vector<Type> hostData(n);
 
@@ -284,7 +284,7 @@ int main()
 
 
 
-        double seconds = sorter.MultiSort<Type,arrSize>(numArraysToSort, hostData.data());
+        double seconds = sorter.MultiSort<Type,arrSize, blockSize>(numArraysToSort, hostData.data());
         std::cout << "Sorting " << numArraysToSort << " arrays of " << arrSize << " elements took " << seconds << " seconds" << std::endl;
         for (int i = 0; i < numArraysToSort; i++)
         {
@@ -316,24 +316,24 @@ int main()
 output (copying arrays takes 90% of the total time, its actually 10x faster on gpu-side):
 
 ```
-Sorting 3200000 arrays of 10 elements took 0.0142436 seconds
+Sorting 6400000 arrays of 10 elements took 0.0263472 seconds
 sort success
-Sorting 3200000 arrays of 10 elements took 0.0137671 seconds
+Sorting 6400000 arrays of 10 elements took 0.0255799 seconds
 sort success
-Sorting 3200000 arrays of 10 elements took 0.0136147 seconds
+Sorting 6400000 arrays of 10 elements took 0.0255251 seconds
 sort success
-Sorting 3200000 arrays of 10 elements took 0.0134526 seconds
+Sorting 6400000 arrays of 10 elements took 0.025334 seconds
 sort success
-Sorting 3200000 arrays of 10 elements took 0.013626 seconds
+Sorting 6400000 arrays of 10 elements took 0.0256296 seconds
 sort success
-Sorting 3200000 arrays of 10 elements took 0.0136001 seconds
+Sorting 6400000 arrays of 10 elements took 0.0256111 seconds
 sort success
-Sorting 3200000 arrays of 10 elements took 0.013636 seconds
+Sorting 6400000 arrays of 10 elements took 0.0257346 seconds
 sort success
-Sorting 3200000 arrays of 10 elements took 0.0137561 seconds
+Sorting 6400000 arrays of 10 elements took 0.0256958 seconds
 sort success
-Sorting 3200000 arrays of 10 elements took 0.0135673 seconds
+Sorting 6400000 arrays of 10 elements took 0.0256691 seconds
 sort success
-Sorting 3200000 arrays of 10 elements took 0.0135255 seconds
+Sorting 6400000 arrays of 10 elements took 0.025927 seconds
 sort success
 ```
