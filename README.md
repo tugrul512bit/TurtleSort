@@ -260,9 +260,9 @@ quicksort (12582912 elements) completed successfully
 // test program
 int main()
 {
-    using Type = double;
+    using Type = int;
 
-    constexpr int arrSize = 49;
+    constexpr int arrSize = 10;
     std::cout << "test" << std::endl;
 
     // number of cuda threads per block
@@ -270,10 +270,9 @@ int main()
     int numArraysToSort = 100000 * blockSize; // has to be multiple of blockSize
 
     int n = arrSize * numArraysToSort;
-    Type* data;
-    Type* dataInterleaved;
+
     bool compress = true;
-    Turtle::TurtleSort<double> sorter(n, compress);
+    Turtle::TurtleSort<Type> sorter(n, compress);
     std::vector<Type> hostData(n);
 
     for (int k = 0; k < 10; k++)
@@ -285,7 +284,7 @@ int main()
 
 
 
-        double seconds = sorter.MultiSort<double,arrSize>(numArraysToSort, hostData.data());
+        double seconds = sorter.MultiSort<Type,arrSize>(numArraysToSort, hostData.data());
         std::cout << "Sorting " << numArraysToSort << " arrays of " << arrSize << " elements took " << seconds << " seconds" << std::endl;
         for (int i = 0; i < numArraysToSort; i++)
         {
@@ -308,16 +307,7 @@ int main()
 
         std::cout << "sort success" << std::endl;
     }
-    if (CUDA_SUCCESS != cudaFree(data))
-    {
-        std::cout << "failed memory free" << std::endl;
-        return 0;
-    }
-    if (CUDA_SUCCESS != cudaFree(dataInterleaved))
-    {
-        std::cout << "failed memory free" << std::endl;
-        return 0;
-    }
+  
     return 0;
 
 }
@@ -326,25 +316,24 @@ int main()
 output (copying arrays takes 90% of the total time, its actually 10x faster on gpu-side):
 
 ```
-test
-Sorting 3200000 arrays of 49 elements took 0.125938 seconds
+Sorting 3200000 arrays of 10 elements took 0.0142436 seconds
 sort success
-Sorting 3200000 arrays of 49 elements took 0.12451 seconds
+Sorting 3200000 arrays of 10 elements took 0.0137671 seconds
 sort success
-Sorting 3200000 arrays of 49 elements took 0.124329 seconds
+Sorting 3200000 arrays of 10 elements took 0.0136147 seconds
 sort success
-Sorting 3200000 arrays of 49 elements took 0.124176 seconds
+Sorting 3200000 arrays of 10 elements took 0.0134526 seconds
 sort success
-Sorting 3200000 arrays of 49 elements took 0.229981 seconds
+Sorting 3200000 arrays of 10 elements took 0.013626 seconds
 sort success
-Sorting 3200000 arrays of 49 elements took 0.124793 seconds
+Sorting 3200000 arrays of 10 elements took 0.0136001 seconds
 sort success
-Sorting 3200000 arrays of 49 elements took 0.124168 seconds
+Sorting 3200000 arrays of 10 elements took 0.013636 seconds
 sort success
-Sorting 3200000 arrays of 49 elements took 0.12444 seconds
+Sorting 3200000 arrays of 10 elements took 0.0137561 seconds
 sort success
-Sorting 3200000 arrays of 49 elements took 0.123733 seconds
+Sorting 3200000 arrays of 10 elements took 0.0135673 seconds
 sort success
-Sorting 3200000 arrays of 49 elements took 0.347791 seconds
+Sorting 3200000 arrays of 10 elements took 0.0135255 seconds
 sort success
 ```
