@@ -24,6 +24,191 @@ namespace Turtle
 		}
 	}
 
+	class Bench
+	{
+	public:
+		Bench(size_t* targetPtr)
+		{
+			target = targetPtr;
+			t1 = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
+			t2 = t1;
+		}
+
+		~Bench()
+		{
+			t2 = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
+			if (target)
+			{
+				*target = t2.count() - t1.count();
+			}
+			else
+			{
+				std::cout << (t2.count() - t1.count()) / 1000000000.0 << " seconds" << std::endl;
+			}
+		}
+	private:
+		size_t* target;
+		std::chrono::nanoseconds t1, t2;
+	};
+
+	namespace HelperForMultiSorter
+	{
+		// when shared-memory performance is to be tested for multi-sorting
+		//#define USE_SHARED_MEM
+
+#define USE_INTERLEAVED_MEM
+
+		template<int ArrSize, int BlockSize>
+		__device__ int ind(const int index, const int threadId)
+		{
+#ifdef USE_INTERLEAVED_MEM
+			return (index * BlockSize) + threadId;
+#else
+			return index + (ArrSize * threadId);
+#endif
+		}
+
+		template<typename Type, int ArrSize, int BlockSize>
+		__device__ void swap(Type* __restrict__ buf, const int index1, const int index2, const int threadId)
+		{
+			//printf(" (%i %i %i) ", threadId, buf[convertToInterleavedIndex(index1, threadId)], buf[convertToInterleavedIndex(index2, threadId)]);
+			const Type tmp = buf[ind<ArrSize, BlockSize>(index1, threadId)];
+			buf[ind<ArrSize, BlockSize>(index1, threadId)] = buf[ind<ArrSize, BlockSize>(index2, threadId)];
+			buf[ind<ArrSize, BlockSize>(index2, threadId)] = tmp;
+		}
+		template<typename Type, int ArrSize, int BlockSize>
+		__device__ void insert(Type* __restrict__ buf, const int index, const int threadId)
+		{
+			const  int parentIndex = ((index + 1) / 2) - 1;
+			if (parentIndex >= 0 && parentIndex != index)
+			{
+
+				if (buf[ind<ArrSize, BlockSize>(parentIndex, threadId)] < buf[ind<ArrSize, BlockSize>(index, threadId)])
+				{
+					swap<Type, ArrSize, BlockSize>(buf, parentIndex, index, threadId);
+					insert<Type, ArrSize, BlockSize>(buf, parentIndex, threadId);
+				}
+
+			}
+		}
+
+		template<typename Type, int ArrSize, int BlockSize>
+		__device__ void remove(Type* __restrict__ buf, const int index, const int currentSize, const int threadIndex)
+		{
+			const int leftChildIndex = ((index + 1) * 2) - 1;
+			const int rightChildIndex = leftChildIndex + 1;
+
+			if (leftChildIndex < currentSize && rightChildIndex < currentSize)
+			{
+				if (buf[ind<ArrSize, BlockSize>(leftChildIndex, threadIndex)] > buf[ind<ArrSize, BlockSize>(rightChildIndex, threadIndex)])
+				{
+					if (buf[ind<ArrSize, BlockSize>(index, threadIndex)] < buf[ind<ArrSize, BlockSize>(leftChildIndex, threadIndex)])
+					{
+						swap<Type, ArrSize, BlockSize>(buf, index, leftChildIndex, threadIndex);
+						remove<Type, ArrSize, BlockSize>(buf, leftChildIndex, currentSize, threadIndex);
+					}
+				}
+				else
+				{
+					if (buf[ind<ArrSize, BlockSize>(index, threadIndex)] < buf[ind<ArrSize, BlockSize>(rightChildIndex, threadIndex)])
+					{
+						swap<Type, ArrSize, BlockSize>(buf, index, rightChildIndex, threadIndex);
+						remove<Type, ArrSize, BlockSize>(buf, rightChildIndex, currentSize, threadIndex);
+					}
+				}
+			}
+			else if (leftChildIndex < currentSize)
+			{
+				if (buf[ind<ArrSize, BlockSize>(index, threadIndex)] < buf[ind<ArrSize, BlockSize>(leftChildIndex, threadIndex)])
+				{
+					swap<Type, ArrSize, BlockSize>(buf, index, leftChildIndex, threadIndex);
+					remove<Type, ArrSize, BlockSize>(buf, leftChildIndex, currentSize, threadIndex);
+				}
+			}
+
+
+		}
+
+		template<typename Type, int ArrSize, int BlockSize>
+		__global__ void multiHeapSort(Type* __restrict__  data, Type* dataInterleaved)
+		{
+
+			int tid = threadIdx.x;
+			int gid = blockIdx.x;
+			int id = tid + gid * blockDim.x;
+
+#ifdef USE_SHARED_MEM
+			__shared__ Type mem[ArrSize * BlockSize];
+			__shared__ Type memTmp[ArrSize * BlockSize];
+
+			for (int i = 0; i < ArrSize; i++)
+				memTmp[tid * BlockSize + i] = data[gid * BlockSize * ArrSize + tid * ArrSize + i];
+			__syncthreads();
+
+			for (int i = 0; i < ArrSize; i++)
+				mem[ind(i, tid)] = memTmp[tid * BlockSize + i];
+#else
+			Type* mem = dataInterleaved + (gid * ArrSize * BlockSize);
+#endif
+
+			__syncthreads();
+
+			// single-thread sort
+			// insert elements 1 by 1
+			for (int i = 1; i < ArrSize; i++)
+			{
+				insert<Type, ArrSize, BlockSize>(mem, i, tid);
+			}
+			// remove elements 1 by 1   
+			for (int i = 0; i < ArrSize; i++)
+			{
+				const int currentSize = ArrSize - i;
+
+				// remove root
+				int tmp = mem[ind<ArrSize, BlockSize>(0, tid)];
+				mem[ind<ArrSize, BlockSize>(0, tid)] = mem[ind<ArrSize, BlockSize>(currentSize - 1, tid)];
+				remove<Type, ArrSize, BlockSize>(mem, 0, currentSize - 1, tid);
+				mem[ind<ArrSize, BlockSize>(currentSize - 1, tid)] = tmp;
+			}
+
+
+			__syncthreads();
+#ifdef USE_SHARED_MEM
+
+			for (int i = 0; i < ArrSize; i++)
+				memTmp[tid * BlockSize + i] = mem[ind<ArrSize, BlockSize>(i, tid)];
+
+			for (int i = 0; i < ArrSize; i++)
+				data[gid * BlockSize * ArrSize + tid * ArrSize + i] = memTmp[tid * BlockSize + i];
+#else
+			for (int i = 0; i < ArrSize; i++)
+				data[gid * BlockSize * ArrSize + tid * ArrSize + i] = mem[ind<ArrSize, BlockSize>(i, tid)];
+#endif
+
+
+		}
+	}
+
+	namespace Multi
+	{
+		template<typename Type, int ArrSize, int BlockSize>
+		struct MultiSorter
+		{
+		private:
+
+		public:
+			void MultiSort(const int numArrays, Type* hostData, Type* deviceData, Type* deviceDataInterleaved)
+			{
+				const int nElementsTotal = numArrays * ArrSize;
+				gpuErrchk(cudaMemcpy((void*)deviceData, hostData, nElementsTotal * sizeof(Type), cudaMemcpyHostToDevice));
+				HelperForMultiSorter::multiHeapSort<Type, ArrSize, BlockSize> << < numArrays / BlockSize, BlockSize >> > (deviceData, deviceDataInterleaved);
+				gpuErrchk(cudaDeviceSynchronize());
+				gpuErrchk(cudaMemcpy(hostData, (void*)deviceData, nElementsTotal * sizeof(Type), cudaMemcpyDeviceToHost));
+			}
+		};
+	}
+#undef USE_INTERLEAVED_MEM
+
 	__global__ void resetTasks(int* tasks, int* tasks2, int* tasks3, int* tasks4, const int n);
 	 
 	template<typename Type>
@@ -41,10 +226,7 @@ namespace Turtle
 			Type* __restrict__ arrTmp, int* __restrict__ idArr, int* __restrict__ idArrTmp);
 		
 
-	/*
-		"fast" in context of how "free" a CPU core is
-		this sorting is asynchronous to CPU
-	*/
+	
 	template<typename Type, bool TrackIndex=true>
 	struct TurtleSort
 	{
@@ -274,6 +456,23 @@ namespace Turtle
 			return (t2.count() - t1.count()) / 1000000000.0;
 		}
 
+		/* type: element type of arrays
+		 arr size: size of each array to sort
+		 blocksize: number of cuda threads per block (blocksize=32 means they sort 32 arrays together, fast, minimal divergence)
+		 returns elapsed time in seconds
+		*/ 
+		template<typename Type, int ArrSize, int BlockSize=32>
+		double MultiSort(const int numArraysToSort, Type* hostDataToSort)
+		{
+			size_t t0;
+			{					
+				Bench bench(&t0);
+				Multi::MultiSorter<Type, ArrSize, BlockSize> sorter;
+				sorter.MultiSort(numArraysToSort, hostDataToSort, data->Data(), dataTmp->Data());
+			}
+			return t0 / 1000000000.0;
+		}
+
 		~TurtleSort()
 		{
 			
@@ -283,30 +482,4 @@ namespace Turtle
 
 
 
-	class Bench
-	{
-	public:
-		Bench(size_t* targetPtr)
-		{
-			target = targetPtr;
-			t1 = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
-			t2 = t1;
-		}
-
-		~Bench()
-		{
-			t2 = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
-			if (target)
-			{
-				*target = t2.count() - t1.count();
-			}
-			else
-			{
-				std::cout << (t2.count() - t1.count()) / 1000000000.0 << " seconds" << std::endl;
-			}
-		}
-	private:
-		size_t* target;
-		std::chrono::nanoseconds t1, t2;
-	};
 }
