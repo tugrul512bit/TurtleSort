@@ -20,6 +20,8 @@
     <CudaCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </CudaCompile>
+    <CudaCompile Include="turtle-globals.cuh" />
+    <CudaCompile Include="turtle-multi-sort.cuh" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />

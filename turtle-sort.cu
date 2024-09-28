@@ -211,7 +211,7 @@ namespace Turtle
         const int sizeChunk2 = stopChunk2 - startChunk2 + 1;
 
 
-
+        // binary-search 
         if(id< sizeChunk2)
         {
             Type val = arr[startChunk2+id];
@@ -221,7 +221,7 @@ namespace Turtle
             int l = startChunk1;
             int r = stopChunk1;
             int m = (r - l) / 2 + l;
-            bool dir = false;
+ 
 
             while (r >= l)
             {
@@ -230,12 +230,12 @@ namespace Turtle
                 if (!(val < arr[m]))
                 {
                     l = m + 1;
-                    dir = true;
+                 
                 }
                 else
                 {
                     r = m - 1;
-                    dir = false;
+             
                 }
                 m = (r - l) / 2 + l;
             }
@@ -256,7 +256,7 @@ namespace Turtle
             int l = startChunk2;
             int r = stopChunk2;
             int m = (r - l) / 2 + l;
-            bool dir = false;
+
 
             while (r >= l)
             {
@@ -264,16 +264,13 @@ namespace Turtle
                 // if bigger, go right
                 if (val > arr[m])
                 {
-                    l = m + 1;
-                    dir = true;
+                    l = m + 1;                
                 }
                 else
                 {
-                    r = m - 1;
-                    dir = false;
+                    r = m - 1;                 
                 }
                 m = (r - l) / 2 + l;
-
             }
 
 
@@ -949,24 +946,12 @@ namespace Turtle
         }
     }
 
-    template<typename Type>
-    __global__ void quickSortMain(
-        int n,
-        Type* __restrict__ data, int* __restrict__ numTasks,
-        int* __restrict__ tasks, int* __restrict__ tasks2, int* __restrict__ tasks3, int* __restrict__ tasks4,      
-        int* __restrict__ idData,
-        Type* __restrict__ arrTmp, int* __restrict__ idArrTmp)
+
+    void resetTasksHost(cudaStream_t & stream0, int* tasks, int* tasks2, int* tasks3, int* tasks4, const int n)
     {
-
-        cudaStream_t stream0;
-        cudaStreamCreateWithFlags(&stream0, (unsigned int)cudaStreamNonBlocking);
-
-        __syncthreads();
-
-        cudaStreamDestroy(stream0);
+        resetTasks <<<1 + n / 1024, 1024, 0, stream0 >>> (tasks, tasks2, tasks3, tasks4, n);
     }
-
-
+    
 
     // int data
     template

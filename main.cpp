@@ -5,7 +5,7 @@ int main()
 {
     using Type = double;
 
-    constexpr int arrSize = 49;
+    constexpr int arrSize = 10;
     std::cout << "test" << std::endl;
 
     // number of cuda threads per block

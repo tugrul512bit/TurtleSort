@@ -199,6 +199,8 @@
   <ItemGroup>
     <ClInclude Include="quick-helper.cuh" />
     <ClInclude Include="turtle-buffer.cuh" />
+    <CudaCompile Include="turtle-globals.cuh" />
+    <CudaCompile Include="turtle-multi-sort.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

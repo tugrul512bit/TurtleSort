@@ -1,24 +1,9 @@
-#ifndef __CUDACC__
-#define __CUDACC__
-#endif
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <device_launch_parameters.h>
-#include <cuda_device_runtime_api.h>
-#include <device_functions.h>
+#include"turtle-globals.cuh"
 #include"quick-helper.cuh"
 #include<string>
 namespace TurtleBuffer
 {
-#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-	inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort = true)
-	{
-		if (code != cudaSuccess)
-		{
-			fprintf(stderr, "GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
-			if (abort) exit(code);
-		}
-	}
+
 	template<typename Type>
 	struct Buffer
 	{
@@ -46,7 +31,7 @@ namespace TurtleBuffer
 			name = nameString;
 			data = nullptr;
 			n = numElements;
-			int compSup;
+
 			allocated = false;
 
 
@@ -78,7 +63,7 @@ namespace TurtleBuffer
 			{
 				
 				auto errCu = cudaMalloc(&data, n * sizeof(Type));
-				gpuErrchk(errCu);
+				TurtleGlobals::gpuErrchk(errCu);
 				allocated = true;
 			}
 
@@ -105,11 +90,11 @@ namespace TurtleBuffer
 					if (CUDA_SUCCESS != QuickHelper::freeCompressible((void*)data, n * sizeof(Type), true))
 					{
 						std::cout<< name << " buffer has CUDA ERROR: compressible memory-free failed. Trying normal deallocation" << std::endl;
-						gpuErrchk(cudaFree(data));
+						TurtleGlobals::gpuErrchk(cudaFree(data));
 					}
 				}
 				else
-					gpuErrchk(cudaFree(data));
+					TurtleGlobals::gpuErrchk(cudaFree(data));
 			}
 		}
 	};
