@@ -3,13 +3,13 @@
 // test program
 int main()
 {
-    using Type = int;
+    using Type = char;
 
-    constexpr int arrSize = 10;
+    constexpr int arrSize = 32;
     std::cout << "test" << std::endl;
 
     // number of cuda threads per block
-    constexpr int blockSize = 64;
+    constexpr int blockSize = 32;
     int numArraysToSort = 100000 * blockSize; // has to be multiple of blockSize
 
     int n = arrSize * numArraysToSort;
@@ -26,8 +26,8 @@ int main()
         }
 
 
-        constexpr bool useSharedMemory = true;
-        double seconds = sorter.MultiSort<Type, arrSize, blockSize, useSharedMemory>(numArraysToSort, hostData.data());
+
+        double seconds = sorter.MultiSort<Type, arrSize, blockSize,true>(numArraysToSort, hostData.data());
         std::cout << "Sorting " << numArraysToSort << " arrays of " << arrSize << " elements took " << seconds << " seconds" << std::endl;
         for (int i = 0; i < numArraysToSort; i++)
         {

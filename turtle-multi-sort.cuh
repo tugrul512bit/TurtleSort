@@ -152,11 +152,6 @@ namespace HelperForMultiSorter
 		Type* mem = dataInterleaved + (gid * ArrSize * BlockSize);
 		
 
-		__syncthreads();
-
-
-
-
 		// single-thread sort
 		// insert elements 1 by 1
 		for (int i = 1; i < ArrSize; i++)
