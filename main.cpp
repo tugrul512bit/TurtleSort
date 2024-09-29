@@ -26,8 +26,8 @@ int main()
         }
 
 
-
-        double seconds = sorter.MultiSort<Type,arrSize, blockSize>(numArraysToSort, hostData.data());
+        constexpr bool useSharedMemory = true;
+        double seconds = sorter.MultiSort<Type, arrSize, blockSize, useSharedMemory>(numArraysToSort, hostData.data());
         std::cout << "Sorting " << numArraysToSort << " arrays of " << arrSize << " elements took " << seconds << " seconds" << std::endl;
         for (int i = 0; i < numArraysToSort; i++)
         {
@@ -50,7 +50,7 @@ int main()
 
         std::cout << "sort success" << std::endl;
     }
-  
+
     return 0;
 
 }

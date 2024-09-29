@@ -8,7 +8,7 @@ namespace HelperForMultiSorter
 {
 
 	// when shared-memory performance is to be tested for multi-sorting
-	//#define USE_SHARED_MEM
+	#define USE_SHARED_MEM 1
 
 #define USE_INTERLEAVED_MEM
 
@@ -84,27 +84,28 @@ namespace HelperForMultiSorter
 	}
 
 	template<typename Type, int ArrSize, int BlockSize>
-	__global__ void multiHeapSort(Type* __restrict__  data, Type* dataInterleaved)
+	__global__ void multiHeapSortWithShared(Type* __restrict__  data, Type* dataInterleaved)
 	{
 
 		int tid = threadIdx.x;
 		int gid = blockIdx.x;
 
-#ifdef USE_SHARED_MEM
+
 		__shared__ Type mem[ArrSize * BlockSize];
 		__shared__ Type memTmp[ArrSize * BlockSize];
 
 		for (int i = 0; i < ArrSize; i++)
-			memTmp[tid * BlockSize + i] = data[gid * BlockSize * ArrSize + tid * ArrSize + i];
+			memTmp[tid + BlockSize * i] = data[gid * BlockSize * ArrSize + tid + BlockSize * i];
 		__syncthreads();
 
 		for (int i = 0; i < ArrSize; i++)
-			mem[ind(i, tid)] = memTmp[tid * BlockSize + i];
-#else
-		Type* mem = dataInterleaved + (gid * ArrSize * BlockSize);
-#endif
+			mem[ind<ArrSize, BlockSize>(i, tid)] = memTmp[tid * ArrSize + i];
+
 
 		__syncthreads();
+
+
+
 
 		// single-thread sort
 		// insert elements 1 by 1
@@ -126,17 +127,61 @@ namespace HelperForMultiSorter
 
 
 		__syncthreads();
-#ifdef USE_SHARED_MEM
 
 		for (int i = 0; i < ArrSize; i++)
-			memTmp[tid * BlockSize + i] = mem[ind<ArrSize, BlockSize>(i, tid)];
+			memTmp[tid * ArrSize + i] = mem[ind<ArrSize, BlockSize>(i, tid)];
 
+		__syncthreads();
 		for (int i = 0; i < ArrSize; i++)
-			data[gid * BlockSize * ArrSize + tid * ArrSize + i] = memTmp[tid * BlockSize + i];
-#else
+			data[gid * BlockSize * ArrSize + tid + BlockSize * i] = memTmp[tid + BlockSize * i];
+		__syncthreads();
+
+	}
+
+
+
+	template<typename Type, int ArrSize, int BlockSize>
+	__global__ void multiHeapSort(Type* __restrict__  data, Type* dataInterleaved)
+	{
+
+		int tid = threadIdx.x;
+		int gid = blockIdx.x;
+
+
+	
+		Type* mem = dataInterleaved + (gid * ArrSize * BlockSize);
+		
+
+		__syncthreads();
+
+
+
+
+		// single-thread sort
+		// insert elements 1 by 1
+		for (int i = 1; i < ArrSize; i++)
+		{
+			insert<Type, ArrSize, BlockSize>(mem, i, tid);
+		}
+		// remove elements 1 by 1   
+		for (int i = 0; i < ArrSize; i++)
+		{
+			const int currentSize = ArrSize - i;
+
+			// remove root
+			int tmp = mem[ind<ArrSize, BlockSize>(0, tid)];
+			mem[ind<ArrSize, BlockSize>(0, tid)] = mem[ind<ArrSize, BlockSize>(currentSize - 1, tid)];
+			remove<Type, ArrSize, BlockSize>(mem, 0, currentSize - 1, tid);
+			mem[ind<ArrSize, BlockSize>(currentSize - 1, tid)] = tmp;
+		}
+
+
+		__syncthreads();
+
 		for (int i = 0; i < ArrSize; i++)
 			data[gid * BlockSize * ArrSize + tid * ArrSize + i] = mem[ind<ArrSize, BlockSize>(i, tid)];
-#endif
+
+
 
 
 	}
@@ -146,7 +191,7 @@ namespace Turtle
 {
 	namespace Multi
 	{
-		template<typename Type, int ArrSize, int BlockSize>
+		template<typename Type, int ArrSize, int BlockSize,bool UseSharedMemory>
 		struct MultiSorter
 		{
 		private:
@@ -156,7 +201,10 @@ namespace Turtle
 			{
 				const int nElementsTotal = numArrays * ArrSize;
 				TurtleGlobals::gpuErrchk(cudaMemcpy((void*)deviceData, hostData, nElementsTotal * sizeof(Type), cudaMemcpyHostToDevice));
-				HelperForMultiSorter::multiHeapSort<Type, ArrSize, BlockSize> << < numArrays / BlockSize, BlockSize >> > (deviceData, deviceDataInterleaved);
+				if(UseSharedMemory)
+					HelperForMultiSorter::multiHeapSortWithShared<Type, ArrSize, BlockSize> << < numArrays / BlockSize, BlockSize >> > (deviceData, deviceDataInterleaved);
+				else
+					HelperForMultiSorter::multiHeapSort<Type, ArrSize, BlockSize> << < numArrays / BlockSize, BlockSize >> > (deviceData, deviceDataInterleaved);
 				TurtleGlobals::gpuErrchk(cudaDeviceSynchronize());
 				TurtleGlobals::gpuErrchk(cudaMemcpy(hostData, (void*)deviceData, nElementsTotal * sizeof(Type), cudaMemcpyDeviceToHost));
 			}

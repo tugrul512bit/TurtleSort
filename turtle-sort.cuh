@@ -262,14 +262,14 @@ namespace Turtle
 		 blocksize: number of cuda threads per block (blocksize=32 means they sort 32 arrays together, fast, minimal divergence)
 		 returns elapsed time in seconds
 		*/ 
-		template<typename Type, int ArrSize, int BlockSize=32>
+		template<typename Type, int ArrSize, int BlockSize=32, bool UseSharedMemory =false>
 		double MultiSort(const int numArraysToSort, Type* hostDataToSort)
 		{
 			size_t t0;
 			{					
 				TurtleGlobals::Bench bench(&t0);
 				
-				Multi::MultiSorter<Type, ArrSize, BlockSize> sorter;
+				Multi::MultiSorter<Type, ArrSize, BlockSize, UseSharedMemory> sorter;
 				sorter.MultiSort(numArraysToSort, hostDataToSort, data->Data(), dataTmp->Data());
 			}
 			return t0 / 1000000000.0;
