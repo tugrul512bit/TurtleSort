@@ -368,3 +368,9 @@ sort success
 Sorting 6400000 arrays of 10 elements took 0.023799 seconds
 sort success
 ```
+
+2.7 milliseconds kernel for sorting 3.2M arrays of 32elements (char type):
+
+![0.84 nanoseconds per 32-element sort](https://s3.amazonaws.com/i.snag.gy/CTDUNW.jpg)
+
+0.84 nanoseconds per 32-element sort.
