@@ -337,3 +337,34 @@ sort success
 Sorting 6400000 arrays of 10 elements took 0.025927 seconds
 sort success
 ```
+
+with shared-memory enabled:
+
+```C++
+constexpr bool useSharedMemory = true;
+double seconds = sorter.MultiSort<Type, arrSize, blockSize, useSharedMemory>(numArraysToSort, hostData.data());
+```
+
+it can get faster depending on number of elements per array, type of elements and size of thread block:
+```
+Sorting 6400000 arrays of 10 elements took 0.0241767 seconds
+sort success
+Sorting 6400000 arrays of 10 elements took 0.0240184 seconds
+sort success
+Sorting 6400000 arrays of 10 elements took 0.0247089 seconds
+sort success
+Sorting 6400000 arrays of 10 elements took 0.0241763 seconds
+sort success
+Sorting 6400000 arrays of 10 elements took 0.0236877 seconds
+sort success
+Sorting 6400000 arrays of 10 elements took 0.023776 seconds
+sort success
+Sorting 6400000 arrays of 10 elements took 0.0239705 seconds
+sort success
+Sorting 6400000 arrays of 10 elements took 0.0239119 seconds
+sort success
+Sorting 6400000 arrays of 10 elements took 0.0238227 seconds
+sort success
+Sorting 6400000 arrays of 10 elements took 0.023799 seconds
+sort success
+```
