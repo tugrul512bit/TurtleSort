@@ -40,6 +40,14 @@ Compiler options:
 - host: /Ox highest optimization level
 - release mode, x64 selected
 
+
+# Methods
+
+```sorter.MultiSort<Type,arrSize, blockSize>(numArrays, hostPtr)```: sorts ```numArrays``` number of arrays each with ```arrSize``` number of elements. Doesn't support index-tracking yet.
+
+```sortVal.StartSorting(&hostVector);```: sorts ```hostVector```
+
+```sortVal.StartSorting(&hostVector,&hostIndexVector);```: sorts ```hostVector``` and rearranges ```hostIntexVector``` accordingly so index values can be tracked.
   
 # Sample Code
 
