@@ -86,7 +86,7 @@ namespace HelperForMultiSorter
 	template<typename Type, int ArrSize, int BlockSize>
 	__global__ void multiHeapSortWithShared(Type* __restrict__  data, Type* dataInterleaved)
 	{
-
+	
 		int tid = threadIdx.x;
 		int gid = blockIdx.x;
 
@@ -135,7 +135,7 @@ namespace HelperForMultiSorter
 		for (int i = 0; i < ArrSize; i++)
 			data[gid * BlockSize * ArrSize + tid + BlockSize * i] = memTmp[tid + BlockSize * i];
 		__syncthreads();
-
+		
 	}
 
 
@@ -197,7 +197,7 @@ namespace Turtle
 				const int nElementsTotal = numArrays * ArrSize;
 				TurtleGlobals::gpuErrchk(cudaMemcpy((void*)deviceData, hostData, nElementsTotal * sizeof(Type), cudaMemcpyHostToDevice));
 				if(UseSharedMemory)
-					HelperForMultiSorter::multiHeapSortWithShared<Type, ArrSize, BlockSize> << < numArrays / BlockSize, BlockSize >> > (deviceData, deviceDataInterleaved);
+					HelperForMultiSorter::multiHeapSortWithShared<Type, ArrSize* UseSharedMemory + !UseSharedMemory, BlockSize* UseSharedMemory+!UseSharedMemory> << < numArrays / BlockSize, BlockSize >> > (deviceData, deviceDataInterleaved);
 				else
 					HelperForMultiSorter::multiHeapSort<Type, ArrSize, BlockSize> << < numArrays / BlockSize, BlockSize >> > (deviceData, deviceDataInterleaved);
 				TurtleGlobals::gpuErrchk(cudaDeviceSynchronize());
